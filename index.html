@@ -2846,6 +2846,31 @@ document.addEventListener('DOMContentLoaded',()=>{
    v.addEventListener('play',__tvAutoFullscreen);
  }
 });
+
+// TV365 Remote Navigation
+let remoteIndex=0;
+function tvItems(){return [...document.querySelectorAll('.channel-item')];}
+function tvFocus(){
+ const items=tvItems(); if(!items.length)return;
+ items.forEach(e=>e.classList.remove('remote-focus'));
+ remoteIndex=Math.max(0,Math.min(remoteIndex,items.length-1));
+ items[remoteIndex].classList.add('remote-focus');
+ items[remoteIndex].scrollIntoView({block:'nearest'});
+}
+document.addEventListener('keydown',e=>{
+ const items=tvItems(); if(!items.length)return;
+ switch(e.key){
+  case 'ArrowDown': remoteIndex=Math.min(remoteIndex+1,items.length-1); tvFocus(); e.preventDefault(); break;
+  case 'ArrowUp': remoteIndex=Math.max(remoteIndex-1,0); tvFocus(); e.preventDefault(); break;
+  case 'Enter':
+  case 'OK':
+    items[remoteIndex].click(); e.preventDefault(); break;
+ }
+});
+const _oldRender=window.renderChannelsExplicit;
+if(_oldRender){
+ window.renderChannelsExplicit=function(ch){_oldRender(ch); setTimeout(tvFocus,50);}
+}
 </script>
 
 </body>
