@@ -2830,6 +2830,24 @@ document.addEventListener('keydown',function(e){
 });
 </script>
 
+
+<script>
+function __tvAutoFullscreen(){
+ const isTv = /TV|AFT|BRAVIA|Android TV|SMART-TV/i.test(navigator.userAgent);
+ if(!isTv) return;
+ const c=document.querySelector('.video-container');
+ if(c && !document.fullscreenElement){
+   c.requestFullscreen?.();
+ }
+}
+document.addEventListener('DOMContentLoaded',()=>{
+ const v=document.getElementById('video-player');
+ if(v){
+   v.addEventListener('play',__tvAutoFullscreen);
+ }
+});
+</script>
+
 </body>
 
 </html>
