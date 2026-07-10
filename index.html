@@ -2823,8 +2823,8 @@ document.addEventListener('DOMContentLoaded',()=>{
 // ================= REMOTE TV365 =================
 let remoteArea = "tabs";
 let tabIndex = 0;
+let channelMemory = {};
 let channelIndex = 0;
-
 function getTabs() {
     return [...document.querySelectorAll(".category-tab")];
 }
@@ -2877,42 +2877,66 @@ document.addEventListener("keydown", function (e) {
 
         case "ArrowLeft":
 
-            if (remoteArea === "tabs") {
+    if (remoteArea === "tabs") {
 
-                if (tabIndex > 0) {
-                    tabIndex--;
-                    updateRemoteFocus();
-                }
+        if (tabIndex > 0) {
 
-            } else {
+            tabIndex--;
 
-                remoteArea = "tabs";
+            tabs[tabIndex].click();
+
+            setTimeout(function () {
+
+                channelIndex = channelMemory[tabIndex] || 0;
                 updateRemoteFocus();
 
-            }
+            },100);
 
-            e.preventDefault();
-            break;
+        }
 
+    } else {
+
+        channelMemory[tabIndex] = channelIndex;
+
+        remoteArea = "tabs";
+
+        updateRemoteFocus();
+
+    }
+
+    e.preventDefault();
+    break;
         case "ArrowRight":
 
-            if (remoteArea === "tabs") {
+    if (remoteArea === "tabs") {
 
-                if (tabIndex < tabs.length - 1) {
-                    tabIndex++;
-                    updateRemoteFocus();
-                }
+        if (tabIndex < tabs.length - 1) {
 
-            } else {
+            tabIndex++;
 
-                remoteArea = "tabs";
+            tabs[tabIndex].click();
+
+            setTimeout(function () {
+
+                channelIndex = channelMemory[tabIndex] || 0;
                 updateRemoteFocus();
 
-            }
+            },100);
 
-            e.preventDefault();
-            break;
+        }
 
+    } else {
+
+        channelMemory[tabIndex] = channelIndex;
+
+        remoteArea = "tabs";
+
+        updateRemoteFocus();
+
+    }
+
+    e.preventDefault();
+    break;
         case "ArrowDown":
 
             if (remoteArea === "tabs") {
