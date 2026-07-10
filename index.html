@@ -2806,32 +2806,6 @@ async function startTV365() {
 </script>
 
 <script>
-document.addEventListener('keydown',function(e){
- const items=[...document.querySelectorAll('.category-tab,.channel-item')];
- if(!items.length)return;
- let i=items.findIndex(el=>el.classList.contains('remote-focus'));
- if(i<0){i=0;items[0].classList.add('remote-focus');items[0].focus?.();}
- const cols=1;
- function setFocus(n){
-   items[i].classList.remove('remote-focus');
-   i=Math.max(0,Math.min(items.length-1,n));
-   items[i].classList.add('remote-focus');
-   items[i].scrollIntoView({block:'nearest'});
- }
- switch(e.key){
-  case 'ArrowDown': e.preventDefault(); setFocus(i+1); break;
-  case 'ArrowUp': e.preventDefault(); setFocus(i-1); break;
-  case 'ArrowRight': e.preventDefault(); setFocus(i+1); break;
-  case 'ArrowLeft': e.preventDefault(); setFocus(i-1); break;
-  case 'Enter':
-  case 'OK':
-    e.preventDefault(); items[i].click(); break;
- }
-});
-</script>
-
-
-<script>
 function __tvAutoFullscreen(){
  const isTv = /TV|AFT|BRAVIA|Android TV|SMART-TV/i.test(navigator.userAgent);
  if(!isTv) return;
@@ -2846,17 +2820,6 @@ document.addEventListener('DOMContentLoaded',()=>{
    v.addEventListener('play',__tvAutoFullscreen);
  }
 });
-
-// TV365 Remote Navigation
-let remoteIndex=0;
-function tvItems(){return [...document.querySelectorAll('.channel-item')];}
-function tvFocus(){
- const items=tvItems(); if(!items.length)return;
- items.forEach(e=>e.classList.remove('remote-focus'));
- remoteIndex=Math.max(0,Math.min(remoteIndex,items.length-1));
- items[remoteIndex].classList.add('remote-focus');
- items[remoteIndex].scrollIntoView({block:'nearest'});
-}
 // ================= REMOTE TV365 =================
 let remoteArea = "tabs";
 let tabIndex = 0;
@@ -3035,12 +2998,10 @@ window.renderChannelsExplicit = function (channels) {
 
     setTimeout(function () {
 
-        if (remoteArea === "list") {
+        if (channelIndex < 0) channelIndex = 0;
 
-            if (channelIndex >= getChannels().length)
-                channelIndex = getChannels().length - 1;
-
-        }
+        if (channelIndex >= getChannels().length)
+            channelIndex = 0;
 
         updateRemoteFocus();
 
