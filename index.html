@@ -2804,7 +2804,30 @@ async function startTV365() {
 }
 
 </script>
+
 <script>
+document.addEventListener('keydown',function(e){
+ const items=[...document.querySelectorAll('.category-tab,.channel-item')];
+ if(!items.length)return;
+ let i=items.findIndex(el=>el.classList.contains('remote-focus'));
+ if(i<0){i=0;items[0].classList.add('remote-focus');items[0].focus?.();}
+ const cols=1;
+ function setFocus(n){
+   items[i].classList.remove('remote-focus');
+   i=Math.max(0,Math.min(items.length-1,n));
+   items[i].classList.add('remote-focus');
+   items[i].scrollIntoView({block:'nearest'});
+ }
+ switch(e.key){
+  case 'ArrowDown': e.preventDefault(); setFocus(i+1); break;
+  case 'ArrowUp': e.preventDefault(); setFocus(i-1); break;
+  case 'ArrowRight': e.preventDefault(); setFocus(i+1); break;
+  case 'ArrowLeft': e.preventDefault(); setFocus(i-1); break;
+  case 'Enter':
+  case 'OK':
+    e.preventDefault(); items[i].click(); break;
+ }
+});
 </script>
 
 
@@ -2824,11 +2847,21 @@ document.addEventListener('DOMContentLoaded',()=>{
  }
 });
 
+// TV365 Remote Navigation
+let remoteIndex=0;
+function tvItems(){return [...document.querySelectorAll('.channel-item')];}
+function tvFocus(){
+ const items=tvItems(); if(!items.length)return;
+ items.forEach(e=>e.classList.remove('remote-focus'));
+ remoteIndex=Math.max(0,Math.min(remoteIndex,items.length-1));
+ items[remoteIndex].classList.add('remote-focus');
+ items[remoteIndex].scrollIntoView({block:'nearest'});
+}
 // ================= REMOTE TV365 =================
 let remoteArea = "tabs";
 let tabIndex = 0;
-let channelMemory = {};
-let channelIndex = 0
+let channelIndex = 0;
+
 function getTabs() {
     return [...document.querySelectorAll(".category-tab")];
 }
@@ -2884,18 +2917,12 @@ document.addEventListener("keydown", function (e) {
             if (remoteArea === "tabs") {
 
                 if (tabIndex > 0) {
-tabIndex--;
-tabs[tabIndex].click();
+                    tabIndex--;
+                    updateRemoteFocus();
+                }
 
-setTimeout(function () {
-
-    channelIndex = channelMemory[tabIndex] || 0;
-
-    updateRemoteFocus();
-
-},100);
             } else {
-channelMemory[tabIndex] = channelIndex;
+
                 remoteArea = "tabs";
                 updateRemoteFocus();
 
@@ -2906,57 +2933,41 @@ channelMemory[tabIndex] = channelIndex;
 
         case "ArrowRight":
 
-    if (remoteArea === "tabs") {
+            if (remoteArea === "tabs") {
 
-        if (tabIndex < tabs.length - 1) {
+                if (tabIndex < tabs.length - 1) {
+                    tabIndex++;
+                    updateRemoteFocus();
+                }
 
-            tabIndex++;
+            } else {
 
-            tabs[tabIndex].click();
+                remoteArea = "tabs";
+                updateRemoteFocus();
 
-           setTimeout(function () {
+            }
 
-    channelIndex = channelMemory[tabIndex] || 0;
+            e.preventDefault();
+            break;
 
-    remoteArea = "list";
-
-    updateRemoteFocus();
-
-},100); setTimeout(function () {
-        }
-
-    } else {
-
-        channelMemory[tabIndex] = channelIndex;
-
-        remoteArea = "tabs";
-
-        updateRemoteFocus();
-
-    }
-
-    e.preventDefault();
-    break;
         case "ArrowDown":
 
-    if (remoteArea === "tabs") {
+            if (remoteArea === "tabs") {
 
-        remoteArea = "list";
+                remoteArea = "list";
+                channelIndex = 0;
 
-        channelIndex = channelMemory[tabIndex] || 0;
+            } else {
 
-    } else {
+                if (channelIndex < items.length - 1)
+                    channelIndex++;
 
-        if (channelIndex < items.length - 1)
-            channelIndex++;
+            }
 
-    }
+            updateRemoteFocus();
+            e.preventDefault();
+            break;
 
-    updateRemoteFocus();
-
-    e.preventDefault();
-
-    break;
         case "ArrowUp":
 
             if (remoteArea === "list") {
@@ -2979,30 +2990,35 @@ channelMemory[tabIndex] = channelIndex;
             break;
 
         case "Enter":
-case "OK":
+        case "OK":
 
-    if (remoteArea === "tabs") {
+            if (remoteArea === "tabs") {
 
-        tabs[tabIndex].click();
+                if (tabs[tabIndex]) {
 
-        setTimeout(function () {
+                    tabs[tabIndex].click();
 
-    channelIndex = channelMemory[tabIndex] || 0;
+                    setTimeout(function () {
+                        channelIndex = 0;
+                        remoteArea = "list";
+                        updateRemoteFocus();
+                    }, 100);
 
-    remoteArea = "list";
+                }
 
-    updateRemoteFocus();
+            } else {
 
-},100);
-    } else {
+                if (items[channelIndex]) {
 
-        items[channelIndex].click();
+                    items[channelIndex].click();
 
-    }
+                }
 
-    e.preventDefault();
+            }
 
-    break;
+            e.preventDefault();
+            break;
+
     }
 
 });
