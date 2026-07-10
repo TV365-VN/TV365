@@ -2062,6 +2062,11 @@ font-weight:700;
         }
 
         // Improved Play Channel
+const items = getChannels();
+const index = items.findIndex(x => x === document.querySelector(".remote-focus"));
+if (index >= 0) {
+    lastChannelByTab[tabIndex] = index;
+}
         async function playChannel(channel) {
             selectedChannelId = channel.id || channel.name;
             const epgBtn = document.getElementById('epg-toggle-btn');
@@ -2861,6 +2866,7 @@ function tvFocus(){
 let remoteArea = "tabs";
 let tabIndex = 0;
 let channelIndex = 0;
+let lastChannelByTab = {};
 
 function getTabs() {
     return [...document.querySelectorAll(".category-tab")];
@@ -2955,7 +2961,7 @@ document.addEventListener("keydown", function (e) {
             if (remoteArea === "tabs") {
 
                 remoteArea = "list";
-                channelIndex = 0;
+                channelIndex = lastChannelByTab[tabIndex] ?? 0;
 
             } else {
 
@@ -2999,7 +3005,7 @@ document.addEventListener("keydown", function (e) {
                     tabs[tabIndex].click();
 
                     setTimeout(function () {
-                        channelIndex = 0;
+                        channelIndex = lastChannelByTab[tabIndex] ?? 0;
                         remoteArea = "list";
                         updateRemoteFocus();
                     }, 100);
@@ -3010,6 +3016,7 @@ document.addEventListener("keydown", function (e) {
 
                 if (items[channelIndex]) {
 
+                    lastChannelByTab[tabIndex] = channelIndex;
                     items[channelIndex].click();
 
                 }
