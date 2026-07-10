@@ -2857,38 +2857,200 @@ function tvFocus(){
  items[remoteIndex].classList.add('remote-focus');
  items[remoteIndex].scrollIntoView({block:'nearest'});
 }
-document.addEventListener('keydown',e=>{
- const items=tvItems(); if(!items.length)return;
- switch(e.key){
-  case 'ArrowDown': remoteIndex=Math.min(remoteIndex+1,items.length-1); tvFocus(); e.preventDefault(); break;
-  case 'ArrowUp': remoteIndex=Math.max(remoteIndex-1,0); tvFocus(); e.preventDefault(); break;
-  case 'Enter':
-  case 'OK':
-    items[remoteIndex].click(); e.preventDefault(); break;
- }
-});
-const _oldRender=window.renderChannelsExplicit;
-if(_oldRender){
- window.renderChannelsExplicit=function(ch){_oldRender(ch); setTimeout(tvFocus,50);}
+// ================= REMOTE TV365 =================
+let remoteArea = "tabs";
+let tabIndex = 0;
+let channelIndex = 0;
+
+function getTabs() {
+    return [...document.querySelectorAll(".category-tab")];
 }
 
-// Remote fix v2
-let remoteMode='list';
-document.addEventListener('keydown',function(e){
- const tabs=[...document.querySelectorAll('.category-tab')];
- const items=[...document.querySelectorAll('.channel-item')];
- const f=document.activeElement;
- if(e.key==='ArrowRight' && remoteMode==='list'){
-   remoteMode='tabs';
-   if(tabs.length){tabs[0].focus();tabs[0].click();}
-   e.preventDefault();
- }
- if((e.key==='ArrowDown'||e.key==='ArrowUp') && remoteMode==='tabs'){
-   remoteMode='list';
- }
+function getChannels() {
+    return [...document.querySelectorAll(".channel-item")];
+}
+
+function clearRemoteFocus() {
+    document.querySelectorAll(".remote-focus").forEach(el => {
+        el.classList.remove("remote-focus");
+    });
+}
+
+function updateRemoteFocus() {
+    clearRemoteFocus();
+
+    if (remoteArea === "tabs") {
+        const tabs = getTabs();
+        if (tabs[tabIndex]) {
+            tabs[tabIndex].classList.add("remote-focus");
+            tabs[tabIndex].scrollIntoView({
+                behavior: "smooth",
+                inline: "center",
+                block: "nearest"
+            });
+        }
+    } else {
+        const items = getChannels();
+
+        if (channelIndex < 0) channelIndex = 0;
+        if (channelIndex >= items.length) channelIndex = items.length - 1;
+
+        if (items[channelIndex]) {
+            items[channelIndex].classList.add("remote-focus");
+            items[channelIndex].scrollIntoView({
+                behavior: "smooth",
+                block: "center"
+            });
+        }
+    }
+}
+
+document.addEventListener("keydown", function (e) {
+
+    const tabs = getTabs();
+    const items = getChannels();
+
+    switch (e.key) {
+
+        case "ArrowLeft":
+
+            if (remoteArea === "tabs") {
+
+                if (tabIndex > 0) {
+                    tabIndex--;
+                    updateRemoteFocus();
+                }
+
+            } else {
+
+                remoteArea = "tabs";
+                updateRemoteFocus();
+
+            }
+
+            e.preventDefault();
+            break;
+
+        case "ArrowRight":
+
+            if (remoteArea === "tabs") {
+
+                if (tabIndex < tabs.length - 1) {
+                    tabIndex++;
+                    updateRemoteFocus();
+                }
+
+            } else {
+
+                remoteArea = "tabs";
+                updateRemoteFocus();
+
+            }
+
+            e.preventDefault();
+            break;
+
+        case "ArrowDown":
+
+            if (remoteArea === "tabs") {
+
+                remoteArea = "list";
+                channelIndex = 0;
+
+            } else {
+
+                if (channelIndex < items.length - 1)
+                    channelIndex++;
+
+            }
+
+            updateRemoteFocus();
+            e.preventDefault();
+            break;
+
+        case "ArrowUp":
+
+            if (remoteArea === "list") {
+
+                if (channelIndex > 0) {
+
+                    channelIndex--;
+
+                } else {
+
+                    remoteArea = "tabs";
+
+                }
+
+                updateRemoteFocus();
+
+            }
+
+            e.preventDefault();
+            break;
+
+        case "Enter":
+        case "OK":
+
+            if (remoteArea === "tabs") {
+
+                if (tabs[tabIndex]) {
+
+                    tabs[tabIndex].click();
+
+                    setTimeout(function () {
+                        channelIndex = 0;
+                        remoteArea = "list";
+                        updateRemoteFocus();
+                    }, 100);
+
+                }
+
+            } else {
+
+                if (items[channelIndex]) {
+
+                    items[channelIndex].click();
+
+                }
+
+            }
+
+            e.preventDefault();
+            break;
+
+    }
+
 });
+
+window.addEventListener("load", function () {
+    setTimeout(updateRemoteFocus, 500);
+});
+
+const __render = window.renderChannelsExplicit;
+
+window.renderChannelsExplicit = function (channels) {
+
+    __render(channels);
+
+    setTimeout(function () {
+
+        if (remoteArea === "list") {
+
+            if (channelIndex >= getChannels().length)
+                channelIndex = getChannels().length - 1;
+
+        }
+
+        updateRemoteFocus();
+
+    }, 50);
+
+};
+// ================= END REMOTE =================
 </script>
 
 </body>
 
 </html>
+
