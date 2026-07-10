@@ -2871,6 +2871,22 @@ const _oldRender=window.renderChannelsExplicit;
 if(_oldRender){
  window.renderChannelsExplicit=function(ch){_oldRender(ch); setTimeout(tvFocus,50);}
 }
+
+// Remote fix v2
+let remoteMode='list';
+document.addEventListener('keydown',function(e){
+ const tabs=[...document.querySelectorAll('.category-tab')];
+ const items=[...document.querySelectorAll('.channel-item')];
+ const f=document.activeElement;
+ if(e.key==='ArrowRight' && remoteMode==='list'){
+   remoteMode='tabs';
+   if(tabs.length){tabs[0].focus();tabs[0].click();}
+   e.preventDefault();
+ }
+ if((e.key==='ArrowDown'||e.key==='ArrowUp') && remoteMode==='tabs'){
+   remoteMode='list';
+ }
+});
 </script>
 
 </body>
