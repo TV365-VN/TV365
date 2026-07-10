@@ -20,9 +20,9 @@
         :root {
             --accent: #f97316;
             --accent-glow: rgba(249, 115, 22, 0.4);
-            --bg-deep: #141414;
-            --panel-bg: rgba(255,255,255,0.055);
-            --glass-border: rgba(249,115,22,0.22);
+            --bg-deep: #16213E;
+            --panel-bg: rgba(31,42,68,.88);
+            --glass-border: rgba(249,115,22,.28);
             --text-main: #ededed;
             --text-muted: #888888;
         }
@@ -64,29 +64,29 @@
             background: var(--panel-bg);
             backdrop-filter: blur(24px);
             -webkit-backdrop-filter: blur(24px);
-            border: 1.5px solid rgba(249,115,22,0.45);
+            border:1.5px solid rgba(249,115,22,.45);
             box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8);
         }
 
         .channel-item {
             position: relative;
             transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-            border: 1.5px solid rgba(249,115,22,0.15);
+            border:1.5px solid rgba(249,115,22,.18);
             overflow: hidden;
             z-index: 1;
         }
 
         .channel-item:hover {
             background: rgba(255, 255, 255, 0.05);
-            border-color: rgba(249,115,22,0.45);
+            border-color:rgba(249,115,22,.45);
             transform: translateX(4px);
         }
 
         /* Premium Active State - Spinning Neon Border */
         .channel-item.active {
-            background: rgba(20, 24, 40, 0.6) !important;
+            background:linear-gradient(135deg,#cfd3d8,#f7f7f7,#bcc2ca)!important;
             border-color: transparent !important;
-            box-shadow: inset 0 0 20px rgba(0, 242, 254, 0.1);
+            box-shadow:0 0 18px rgba(255,255,255,.35);
             transform: translateY(-1px) translateX(2px);
         }
 
@@ -113,7 +113,7 @@
             height: 600%;
             top: -250%;
             left: -250%;
-            background: conic-gradient(transparent 0deg, #00f2fe 60deg, #ffffff 90deg, #f093fb 120deg, transparent 180deg, transparent 180deg, #00f2fe 240deg, #ffffff 270deg, #f093fb 300deg, transparent 360deg);
+            background: conic-gradient(transparent 0deg, #e5e7eb 60deg, #ffffff 90deg, #9ca3af 120deg, transparent 180deg, transparent 180deg, #e5e7eb 240deg, #ffffff 270deg, #9ca3af 300deg, transparent 360deg);
             animation: spin 3.5s linear infinite;
         }
 
@@ -136,7 +136,7 @@
 
         .indicator-bar {
             width: 2px;
-            background: var(--accent);
+            background:linear-gradient(135deg,#cfd3d8,#f5f7fa,#b7bcc3);color:#111;
             border-radius: 1px;
             animation: bounce 0.8s ease-in-out infinite alternate;
         }
@@ -153,7 +153,7 @@
 
         .audio-bar {
             width: 6px;
-            background: var(--accent);
+            background:linear-gradient(135deg,#cfd3d8,#f5f7fa,#b7bcc3);color:#111;
             border-radius: 3px 3px 0 0;
             transform-origin: bottom;
             animation: audio-bar 0.8s ease-in-out infinite alternate;
@@ -242,9 +242,9 @@
         }
 
         .category-tab.active {
-            background: var(--accent);
+            background:linear-gradient(135deg,#cfd3d8,#f5f7fa,#b7bcc3);color:#111;
             color: white;
-            box-shadow: 0 4px 12px var(--accent-glow);
+            box-shadow:0 0 18px rgba(255,255,255,.45);
         }
 
         .group-icon-rotated {
@@ -360,7 +360,7 @@
         .toast {
             background: rgba(15, 15, 15, 0.9);
             backdrop-filter: blur(12px);
-            border: 1.5px solid rgba(249,115,22,0.45);
+            border:1.5px solid rgba(249,115,22,.45);
             border-radius: 12px;
             padding: 12px 16px;
             margin-bottom: 8px;
@@ -426,11 +426,33 @@
 
         .epg-progress-bar {
             height: 100%;
-            background: var(--accent);
+            background:linear-gradient(135deg,#cfd3d8,#f5f7fa,#b7bcc3);color:#111;
             width: 0%;
             transition: width 0.3s;
         }
-    </style>
+    
+.category-tab.active{
+position:relative;
+overflow:hidden;
+}
+.category-tab.active::before,
+.channel-item.active .active-glow::before{
+animation:spin 4s linear infinite!important;
+}
+.category-tab.active::after{
+content:"";
+position:absolute;
+inset:0;
+padding:2px;
+border-radius:inherit;
+background:conic-gradient(#ffffff,#d1d5db,#ffffff,#9ca3af,#ffffff);
+-webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);
+-webkit-mask-composite:xor;
+mask-composite:exclude;
+pointer-events:none;
+}
+
+</style>
 </head>
 
 <body class="selection:bg-orange-500/30" onload="startTV365()">
@@ -460,7 +482,7 @@
                         </div>
                     </div>
                     <button onclick="openAddDialog()"
-                        class="w-8 h-8 flex items-center justify-center rounded-xl bg-white/5 hover:bg-orange-500 hover:text-white border border-orange-500/20 text-orange-400 transition-all active:scale-95"
+                        class="w-8 h-8 flex items-center justify-center rounded-xl bg-white/5 hover:bg-orange-500 hover:text-white border border-white/5 text-orange-400 transition-all active:scale-95"
                         title="Thêm nguồn m3u8">
                         <i data-lucide="plus" class="w-4 h-4"></i>
                     </button>
@@ -470,7 +492,7 @@
                     <i data-lucide="search"
                         class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted group-focus-within:text-orange-400 transition-colors pointer-events-none z-10"></i>
                     <input type="text" id="search-input" placeholder="Tìm kiếm kênh..."
-                        class="w-full pl-10 pr-9 py-2 bg-zinc-900/70 border border-orange-500/20 rounded-2xl text-xs text-white focus:outline-none focus:border-orange-500/40 transition-all placeholder-white/30"
+                        class="w-full pl-10 pr-9 py-2 bg-black/40 border border-white/5 rounded-2xl text-xs text-white focus:outline-none focus:border-orange-500/40 transition-all placeholder-white/30"
                         oninput="filterChannels()">
                     <button id="clear-search-btn"
                         class="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white hidden focus:outline-none transition-colors z-10"
@@ -495,7 +517,7 @@
             </div>
 
             <!-- Sidebar Footer -->
-            <div class="p-3 bg-zinc-900/70 border-t border-white/5 flex items-center justify-between shrink-0">
+            <div class="p-3 bg-black/40 border-t border-white/5 flex items-center justify-between shrink-0">
                 <div class="flex items-center gap-2">
                     <div class="w-1.5 h-1.5 rounded-full bg-orange-500 shadow-[0_0_8px_var(--accent)]"></div>
                     <span id="channel-count" class="text-[10px] text-muted font-semibold uppercase tracking-wider">
@@ -589,7 +611,7 @@
 
                     <!-- Loading Spinner -->
                     <div id="loading-overlay"
-                        class="absolute inset-0 flex flex-col items-center justify-center bg-zinc-900/75 backdrop-blur-md z-20 hidden text-white">
+                        class="absolute inset-0 flex flex-col items-center justify-center bg-black/60 backdrop-blur-md z-20 hidden text-white">
                         <div
                             class="w-8 h-8 border-2 border-orange-500/30 border-t-indigo-500 rounded-full animate-spin">
                         </div>
@@ -629,7 +651,7 @@
 
                     <!-- EPG Toggle Button (Floating) -->
                     <button id="epg-toggle-btn" onclick="toggleEPG()"
-                        class="absolute top-4 left-4 z-50 w-10 h-10 rounded-full bg-zinc-900/75 backdrop-blur-md border border-orange-500/25 flex items-center justify-center text-white/70 hover:text-white hover:border-orange-500/50 hover:bg-orange-500/20 shadow-xl hidden">
+                        class="absolute top-4 left-4 z-50 w-10 h-10 rounded-full bg-black/60 backdrop-blur-md border border-white/10 flex items-center justify-center text-white/70 hover:text-white hover:border-orange-500/50 hover:bg-orange-500/20 shadow-xl hidden">
                         <i data-lucide="calendar" class="w-5 h-5"></i>
                     </button>
                 </div>
@@ -646,8 +668,8 @@
 
     <!-- Modal Thêm Kênh / Playlist (Popup Dialog) -->
     <div id="add-dialog"
-        class="absolute inset-0 z-[100] flex items-center justify-center bg-zinc-900/75 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-300">
-        <div class="bg-[#242424] border border-orange-500/25 rounded-2xl p-5 w-full max-w-sm flex flex-col gap-4 shadow-2xl transform scale-95 transition-transform duration-300"
+        class="absolute inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-300">
+        <div class="bg-[#111111] border border-white/10 rounded-2xl p-5 w-full max-w-sm flex flex-col gap-4 shadow-2xl transform scale-95 transition-transform duration-300"
             id="add-dialog-content">
 
             <div class="flex items-center justify-between border-b border-white/5 pb-3">
@@ -668,20 +690,20 @@
                 </label>
                 <div class="grid grid-cols-2 gap-2">
                     <button onclick="loadPredefinedUrl('https://raw.githubusercontent.com/TV365-VN/TV365-DATA/main/error.m3u')"
-                        class="px-3 py-2.5 bg-[#242424] hover:bg-orange-500/10 border border-orange-500/20 hover:border-orange-500/30 rounded-xl transition-all group flex items-center justify-center">
+                        class="px-3 py-2.5 bg-[#1a1a1a] hover:bg-orange-500/10 border border-white/5 hover:border-orange-500/30 rounded-xl transition-all group flex items-center justify-center">
                         <span class="text-[12px] font-bold text-white group-hover:text-orange-400 transition-colors">
                             TV
                         </span>
                     </button>
                     <button onclick="loadPredefinedUrl('https://tinyurl.com/HoiQuanClick/')"
-                        class="px-3 py-2.5 bg-[#242424] hover:bg-red-500/10 border border-orange-500/20 hover:border-red-500/30 rounded-xl transition-all group flex items-center justify-center">
+                        class="px-3 py-2.5 bg-[#1a1a1a] hover:bg-red-500/10 border border-white/5 hover:border-red-500/30 rounded-xl transition-all group flex items-center justify-center">
                         <span class="text-[12px] font-bold text-white group-hover:text-red-400 transition-colors">
                             Hội
                             Quán
                         </span>
                     </button>
                     <button onclick="loadPredefinedUrl('https://vpsttt.vietanhtv.top/tv/')"
-                        class="px-3 py-2.5 bg-[#242424] hover:bg-emerald-500/10 border border-orange-500/20 hover:border-emerald-500/30 rounded-xl transition-all group flex items-center justify-center">
+                        class="px-3 py-2.5 bg-[#1a1a1a] hover:bg-emerald-500/10 border border-white/5 hover:border-emerald-500/30 rounded-xl transition-all group flex items-center justify-center">
                         <span class="text-[12px] font-bold text-white group-hover:text-emerald-400 transition-colors">
                             Bóng
                             Đá
@@ -692,7 +714,7 @@
 
             <div class="relative flex items-center justify-center my-1">
                 <div class="absolute inset-x-0 h-[1px] bg-white/5"></div>
-                <span class="relative bg-[#242424] px-2 text-[10px] text-[#666666] font-medium uppercase">
+                <span class="relative bg-[#111111] px-2 text-[10px] text-[#666666] font-medium uppercase">
                     Tùy
                     Chỉnh
                 </span>
@@ -707,7 +729,7 @@
                             class="w-3.5 h-3.5 text-[#666666] group-focus-within:text-orange-400 transition-colors"></i>
                     </div>
                     <input type="text" id="url-input" placeholder="https://domain.com/playlist"
-                        class="w-full pl-8 pr-16 py-2.5 bg-[#202020] border border-orange-500/20 rounded-xl text-xs text-white focus:outline-none focus:bg-[#242424] focus:border-orange-500/50 transition-all placeholder-[#555555]">
+                        class="w-full pl-8 pr-16 py-2.5 bg-[#151515] border border-white/5 rounded-xl text-xs text-white focus:outline-none focus:bg-[#1a1a1a] focus:border-orange-500/50 transition-all placeholder-[#555555]">
                     <button onclick="loadFromUrl(); closeAddDialog();"
                         class="absolute right-1 top-1 bottom-1 bg-orange-500 hover:bg-orange-600 text-white px-3.5 rounded-lg text-[11px] font-medium transition-colors flex items-center shadow-sm">
                         TẢI
@@ -717,7 +739,7 @@
 
             <div class="relative flex items-center justify-center my-1">
                 <div class="absolute inset-x-0 h-[1px] bg-white/5"></div>
-                <span class="relative bg-[#242424] px-2 text-[10px] text-[#666666] font-medium uppercase">Hoặc</span>
+                <span class="relative bg-[#111111] px-2 text-[10px] text-[#666666] font-medium uppercase">Hoặc</span>
             </div>
 
             <!-- Nút Upload File Local -->
@@ -726,7 +748,7 @@
                 <input type="file" id="file-upload" accept=".m3u,.m3u8,.json" class="hidden"
                     onchange="handleFileUpload(event); closeAddDialog();">
                 <label for="file-upload"
-                    class="cursor-pointer flex items-center justify-center gap-2 bg-[#242424] hover:bg-[#222222] border border-orange-500/25 text-white px-4 py-2.5 text-xs font-medium rounded-xl transition-all w-full group">
+                    class="cursor-pointer flex items-center justify-center gap-2 bg-[#1a1a1a] hover:bg-[#222222] border border-white/10 text-white px-4 py-2.5 text-xs font-medium rounded-xl transition-all w-full group">
                     <i data-lucide="folder-open"
                         class="w-4 h-4 text-orange-400 group-hover:scale-110 transition-transform"></i>
                     <span>Tải tệp từ máy (.m3u)</span>
@@ -1333,7 +1355,7 @@
 
                 li.innerHTML = `
                         ${isPlaying ? '<div class="active-glow"></div>' : ''}
-                        <div class="w-16 aspect-video shrink-0 bg-white/5 rounded-lg border border-orange-500/20 flex items-center justify-center overflow-hidden">
+                        <div class="w-16 aspect-video shrink-0 bg-white/5 rounded-lg border border-white/5 flex items-center justify-center overflow-hidden">
                             ${logoHtml}
                         </div>
                         <div class="flex-1 min-w-0">
@@ -1371,7 +1393,7 @@
 
             groups.forEach(group => {
                 const btn = document.createElement('button');
-                btn.className = `category-tab px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider border border-orange-500/20 ${currentCategory === group ? 'active' : 'bg-white/5 text-muted hover:bg-white/10'}`;
+                btn.className = `category-tab px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider border border-white/5 ${currentCategory === group ? 'active' : 'bg-white/5 text-muted hover:bg-white/10'}`;
                 btn.innerText = group;
                 btn.onclick = () => {
                     currentCategory = group;
@@ -1560,7 +1582,7 @@
 
                 li.innerHTML = `
                         ${isPlaying ? '<div class="active-glow"></div>' : ''}
-                        <div class="w-16 aspect-video shrink-0 bg-white/5 rounded-lg border border-orange-500/20 flex items-center justify-center overflow-hidden">
+                        <div class="w-16 aspect-video shrink-0 bg-white/5 rounded-lg border border-white/5 flex items-center justify-center overflow-hidden">
                             ${logoHtml}
                         </div>
                         <div class="flex-1 min-w-0">
@@ -1970,7 +1992,7 @@
             filtered.forEach(p => {
                 const isCurrent = p.start <= now && p.stop >= now;
                 const item = document.createElement('div');
-                item.className = `epg-item p-3 mb-2 rounded-xl bg-white/[0.03] border border-orange-500/20 ${isCurrent ? 'current' : ''}`;
+                item.className = `epg-item p-3 mb-2 rounded-xl bg-white/[0.03] border border-white/5 ${isCurrent ? 'current' : ''}`;
 
                 const startTime = p.start.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
                 const endTime = p.stop.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
