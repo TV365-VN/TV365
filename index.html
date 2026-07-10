@@ -64,21 +64,21 @@
             background: var(--panel-bg);
             backdrop-filter: blur(24px);
             -webkit-backdrop-filter: blur(24px);
-            border: 1px solid var(--glass-border);
+            border: 3px solid rgba(239,68,68,0.75);
             box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8);
         }
 
         .channel-item {
             position: relative;
             transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-            border: 1px solid transparent;
+            border: 3px solid rgba(239,68,68,0.35);
             overflow: hidden;
             z-index: 1;
         }
 
         .channel-item:hover {
             background: rgba(255, 255, 255, 0.05);
-            border-color: rgba(99, 102, 241, 0.2);
+            border-color: rgba(239,68,68,0.9);
             transform: translateX(4px);
         }
 
@@ -360,7 +360,7 @@
         .toast {
             background: rgba(15, 15, 15, 0.9);
             backdrop-filter: blur(12px);
-            border: 1px solid var(--glass-border);
+            border: 3px solid rgba(239,68,68,0.75);
             border-radius: 12px;
             padding: 12px 16px;
             margin-bottom: 8px;
@@ -407,13 +407,13 @@
         }
 
         .epg-item {
-            border-left: 2px solid transparent;
+            border-left: 4px solid transparent;
             transition: all 0.2s;
         }
 
         .epg-item.current {
             background: rgba(99, 102, 241, 0.1);
-            border-left-color: var(--accent);
+            border-left-color: #ef4444;
         }
 
         .epg-progress {
@@ -430,52 +430,13 @@
             width: 0%;
             transition: width 0.3s;
         }
-    
-
-/* ==== TV365 Premium Orange ==== */
-.glass-panel,
-.video-container,
-#epg-panel,
-#add-dialog-content{
-    border:1px solid rgba(249,115,22,.25)!important;
-    box-shadow:0 0 18px rgba(249,115,22,.12),0 10px 30px rgba(0,0,0,.55)!important;
-}
-.channel-item{
-    border:1px solid rgba(249,115,22,.18)!important;
-    border-radius:16px!important;
-}
-.channel-item:hover{
-    border-color:#f97316!important;
-    box-shadow:0 0 16px rgba(249,115,22,.35)!important;
-}
-.channel-item.active{
-    border:2px solid #f97316!important;
-    box-shadow:0 0 20px rgba(249,115,22,.45)!important;
-}
-.category-tab{
-    border:1px solid rgba(249,115,22,.22)!important;
-}
-.category-tab:hover{
-    border-color:#f97316!important;
-    box-shadow:0 0 12px rgba(249,115,22,.25)!important;
-}
-input,select{
-    border:1px solid rgba(249,115,22,.22)!important;
-}
-button{
-    transition:.25s!important;
-}
-button:hover{
-    box-shadow:0 0 12px rgba(249,115,22,.28);
-}
-
-</style>
+    </style>
 </head>
 
 <body class="selection:bg-orange-500/30" onload="startTV365()">
     <div id="toast-container"></div>
 
-    <div class="flex flex-col landscape:flex-row h-screen w-screen p-3 gap-3 overflow-hidden box-border">
+    <div class="flex flex-col landscape:flex-row h-screen w-screen p-5 gap-5 overflow-hidden box-border">
 
         <!-- SIDEBAR -->
         <aside id="sidebar"
@@ -485,7 +446,7 @@ button:hover{
                 <div class="flex items-center justify-between mb-4">
                     <div class="flex items-center gap-2.5">
                         <div
-                            class="w-8 h-8 rounded-xl bg-orange-500 flex items-center justify-center shadow-lg shadow-orange-500/20">
+                            class="w-8 h-8 rounded-3xl bg-orange-500 flex items-center justify-center shadow-lg shadow-orange-500/20">
                             <i data-lucide="tv" class="w-4 h-4 text-white"></i>
                         </div>
                         <div>
@@ -499,7 +460,7 @@ button:hover{
                         </div>
                     </div>
                     <button onclick="openAddDialog()"
-                        class="w-8 h-8 flex items-center justify-center rounded-xl bg-white/5 hover:bg-orange-500 hover:text-white border border-white/5 text-orange-400 transition-all active:scale-95"
+                        class="w-8 h-8 flex items-center justify-center rounded-3xl bg-white/5 hover:bg-orange-500 hover:text-white border-[3px] border-red-500/70 text-orange-400 transition-all active:scale-95"
                         title="Thêm nguồn m3u8">
                         <i data-lucide="plus" class="w-4 h-4"></i>
                     </button>
@@ -509,7 +470,7 @@ button:hover{
                     <i data-lucide="search"
                         class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted group-focus-within:text-orange-400 transition-colors pointer-events-none z-10"></i>
                     <input type="text" id="search-input" placeholder="Tìm kiếm kênh..."
-                        class="w-full pl-10 pr-9 py-2 bg-black/40 border border-white/5 rounded-2xl text-xs text-white focus:outline-none focus:border-orange-500/40 transition-all placeholder-white/30"
+                        class="w-full pl-10 pr-9 py-2 bg-black/40 border-[3px] border-red-500/70 rounded-[2rem] text-xs text-white focus:outline-none focus:border-orange-500/40 transition-all placeholder-white/30"
                         oninput="filterChannels()">
                     <button id="clear-search-btn"
                         class="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white hidden focus:outline-none transition-colors z-10"
@@ -555,7 +516,7 @@ button:hover{
             class="order-1 landscape:order-2 flex-none landscape:flex-1 flex flex-col gap-3 landscape:gap-4 h-auto landscape:h-full overflow-hidden min-w-0 landscape:min-w-[320px]">
             <!-- Video Container -->
             <main
-                class="w-full aspect-video landscape:aspect-auto landscape:flex-1 glass-panel rounded-xl landscape:rounded-none overflow-hidden relative shadow-2xl shrink-0">
+                class="w-full aspect-video landscape:aspect-auto landscape:flex-1 glass-panel rounded-3xl landscape:rounded-none overflow-hidden relative shadow-2xl shrink-0">
                 <div class="w-full h-full bg-black relative video-container overflow-hidden">
                     <video id="video-player" class="w-full h-full object-contain" playsinline controls></video>
 
@@ -589,7 +550,7 @@ button:hover{
 
                             <!-- Channel Logo (Just above the title, no background/border) -->
                             <img id="audio-visualizer-logo" src=""
-                                class="w-full max-w-[200px] sm:max-w-xs aspect-video object-contain mb-4 hidden drop-shadow-2xl rounded-2xl shrink-0">
+                                class="w-full max-w-[200px] sm:max-w-xs aspect-video object-contain mb-4 hidden drop-shadow-2xl rounded-[2rem] shrink-0">
 
                             <h3 id="audio-visualizer-title"
                                 class="text-white text-base sm:text-lg font-semibold tracking-wide mb-1 text-center w-full truncate px-4">
@@ -668,14 +629,14 @@ button:hover{
 
                     <!-- EPG Toggle Button (Floating) -->
                     <button id="epg-toggle-btn" onclick="toggleEPG()"
-                        class="absolute top-4 left-4 z-50 w-10 h-10 rounded-full bg-black/60 backdrop-blur-md border border-white/10 flex items-center justify-center text-white/70 hover:text-white hover:border-orange-500/50 hover:bg-orange-500/20 shadow-xl hidden">
+                        class="absolute top-4 left-4 z-50 w-10 h-10 rounded-full bg-black/60 backdrop-blur-md border-[3px] border-red-500/70 flex items-center justify-center text-white/70 hover:text-white hover:border-orange-500/50 hover:bg-orange-500/20 shadow-xl hidden">
                         <i data-lucide="calendar" class="w-5 h-5"></i>
                     </button>
                 </div>
             </main>
 
             <!-- Category Tabs (Separate Box) -->
-            <div class="glass-panel p-3 rounded-2xl shrink-0">
+            <div class="glass-panel p-3 rounded-[2rem] shrink-0">
                 <div id="category-tabs" class="flex gap-2 overflow-x-auto pb-1 custom-scrollbar no-scrollbar">
                     <!-- Tabs rendered by JS -->
                 </div>
@@ -686,7 +647,7 @@ button:hover{
     <!-- Modal Thêm Kênh / Playlist (Popup Dialog) -->
     <div id="add-dialog"
         class="absolute inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-300">
-        <div class="bg-[#111111] border border-white/10 rounded-2xl p-5 w-full max-w-sm flex flex-col gap-4 shadow-2xl transform scale-95 transition-transform duration-300"
+        <div class="bg-[#111111] border-[3px] border-red-500/70 rounded-[2rem] p-5 w-full max-w-sm flex flex-col gap-4 shadow-2xl transform scale-95 transition-transform duration-300"
             id="add-dialog-content">
 
             <div class="flex items-center justify-between border-b border-white/5 pb-3">
@@ -707,20 +668,20 @@ button:hover{
                 </label>
                 <div class="grid grid-cols-2 gap-2">
                     <button onclick="loadPredefinedUrl('https://raw.githubusercontent.com/TV365-VN/TV365-DATA/main/error.m3u')"
-                        class="px-3 py-2.5 bg-[#1a1a1a] hover:bg-orange-500/10 border border-white/5 hover:border-orange-500/30 rounded-xl transition-all group flex items-center justify-center">
+                        class="px-3 py-2.5 bg-[#1a1a1a] hover:bg-orange-500/10 border-[3px] border-red-500/70 hover:border-orange-500/30 rounded-3xl transition-all group flex items-center justify-center">
                         <span class="text-[12px] font-bold text-white group-hover:text-orange-400 transition-colors">
                             TV
                         </span>
                     </button>
                     <button onclick="loadPredefinedUrl('https://tinyurl.com/HoiQuanClick/')"
-                        class="px-3 py-2.5 bg-[#1a1a1a] hover:bg-red-500/10 border border-white/5 hover:border-red-500/30 rounded-xl transition-all group flex items-center justify-center">
+                        class="px-3 py-2.5 bg-[#1a1a1a] hover:bg-red-500/10 border-[3px] border-red-500/70 hover:border-red-500/30 rounded-3xl transition-all group flex items-center justify-center">
                         <span class="text-[12px] font-bold text-white group-hover:text-red-400 transition-colors">
                             Hội
                             Quán
                         </span>
                     </button>
                     <button onclick="loadPredefinedUrl('https://vpsttt.vietanhtv.top/tv/')"
-                        class="px-3 py-2.5 bg-[#1a1a1a] hover:bg-emerald-500/10 border border-white/5 hover:border-emerald-500/30 rounded-xl transition-all group flex items-center justify-center">
+                        class="px-3 py-2.5 bg-[#1a1a1a] hover:bg-emerald-500/10 border-[3px] border-red-500/70 hover:border-emerald-500/30 rounded-3xl transition-all group flex items-center justify-center">
                         <span class="text-[12px] font-bold text-white group-hover:text-emerald-400 transition-colors">
                             Bóng
                             Đá
@@ -746,7 +707,7 @@ button:hover{
                             class="w-3.5 h-3.5 text-[#666666] group-focus-within:text-orange-400 transition-colors"></i>
                     </div>
                     <input type="text" id="url-input" placeholder="https://domain.com/playlist"
-                        class="w-full pl-8 pr-16 py-2.5 bg-[#151515] border border-white/5 rounded-xl text-xs text-white focus:outline-none focus:bg-[#1a1a1a] focus:border-orange-500/50 transition-all placeholder-[#555555]">
+                        class="w-full pl-8 pr-16 py-2.5 bg-[#151515] border-[3px] border-red-500/70 rounded-3xl text-xs text-white focus:outline-none focus:bg-[#1a1a1a] focus:border-orange-500/50 transition-all placeholder-[#555555]">
                     <button onclick="loadFromUrl(); closeAddDialog();"
                         class="absolute right-1 top-1 bottom-1 bg-orange-500 hover:bg-orange-600 text-white px-3.5 rounded-lg text-[11px] font-medium transition-colors flex items-center shadow-sm">
                         TẢI
@@ -765,7 +726,7 @@ button:hover{
                 <input type="file" id="file-upload" accept=".m3u,.m3u8,.json" class="hidden"
                     onchange="handleFileUpload(event); closeAddDialog();">
                 <label for="file-upload"
-                    class="cursor-pointer flex items-center justify-center gap-2 bg-[#1a1a1a] hover:bg-[#222222] border border-white/10 text-white px-4 py-2.5 text-xs font-medium rounded-xl transition-all w-full group">
+                    class="cursor-pointer flex items-center justify-center gap-2 bg-[#1a1a1a] hover:bg-[#222222] border-[3px] border-red-500/70 text-white px-4 py-2.5 text-xs font-medium rounded-3xl transition-all w-full group">
                     <i data-lucide="folder-open"
                         class="w-4 h-4 text-orange-400 group-hover:scale-110 transition-transform"></i>
                     <span>Tải tệp từ máy (.m3u)</span>
@@ -1364,7 +1325,7 @@ button:hover{
                 const li = document.createElement('li');
                 const isPlaying = currentPlayingUrl === channel.url;
 
-                li.className = `channel-item relative flex items-center gap-3 p-2.5 rounded-2xl cursor-pointer select-none ${isPlaying ? 'active' : ''}`;
+                li.className = `channel-item relative flex items-center gap-3 p-2.5 rounded-[2rem] cursor-pointer select-none ${isPlaying ? 'active' : ''}`;
 
                 const logoHtml = channel.logo
                     ? `<img src="${channel.logo}" alt="" class="w-full h-full object-contain" loading="lazy">`
@@ -1372,7 +1333,7 @@ button:hover{
 
                 li.innerHTML = `
                         ${isPlaying ? '<div class="active-glow"></div>' : ''}
-                        <div class="w-16 aspect-video shrink-0 bg-white/5 rounded-lg border border-white/5 flex items-center justify-center overflow-hidden">
+                        <div class="w-16 aspect-video shrink-0 bg-white/5 rounded-lg border-[3px] border-red-500/70 flex items-center justify-center overflow-hidden">
                             ${logoHtml}
                         </div>
                         <div class="flex-1 min-w-0">
@@ -1410,7 +1371,7 @@ button:hover{
 
             groups.forEach(group => {
                 const btn = document.createElement('button');
-                btn.className = `category-tab px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider border border-white/5 ${currentCategory === group ? 'active' : 'bg-white/5 text-muted hover:bg-white/10'}`;
+                btn.className = `category-tab px-4 py-2 rounded-3xl text-[10px] font-bold uppercase tracking-wider border-[3px] border-red-500/70 ${currentCategory === group ? 'active' : 'bg-white/5 text-muted hover:bg-white/10'}`;
                 btn.innerText = group;
                 btn.onclick = () => {
                     currentCategory = group;
@@ -1583,7 +1544,7 @@ button:hover{
             channels.forEach((channel) => {
                 const li = document.createElement('li');
                 const isPlaying = currentPlayingUrl === channel.url;
-                li.className = `channel-item relative flex items-center gap-3 p-2.5 rounded-2xl cursor-pointer select-none ${isPlaying ? 'active' : ''}`;
+                li.className = `channel-item relative flex items-center gap-3 p-2.5 rounded-[2rem] cursor-pointer select-none ${isPlaying ? 'active' : ''}`;
 
                 // Get Current Program
                 let currentProgram = null;
@@ -1599,7 +1560,7 @@ button:hover{
 
                 li.innerHTML = `
                         ${isPlaying ? '<div class="active-glow"></div>' : ''}
-                        <div class="w-16 aspect-video shrink-0 bg-white/5 rounded-lg border border-white/5 flex items-center justify-center overflow-hidden">
+                        <div class="w-16 aspect-video shrink-0 bg-white/5 rounded-lg border-[3px] border-red-500/70 flex items-center justify-center overflow-hidden">
                             ${logoHtml}
                         </div>
                         <div class="flex-1 min-w-0">
@@ -2009,7 +1970,7 @@ button:hover{
             filtered.forEach(p => {
                 const isCurrent = p.start <= now && p.stop >= now;
                 const item = document.createElement('div');
-                item.className = `epg-item p-3 mb-2 rounded-xl bg-white/[0.03] border border-white/5 ${isCurrent ? 'current' : ''}`;
+                item.className = `epg-item p-3 mb-2 rounded-3xl bg-white/[0.03] border-[3px] border-red-500/70 ${isCurrent ? 'current' : ''}`;
 
                 const startTime = p.start.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
                 const endTime = p.stop.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
