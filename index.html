@@ -262,7 +262,8 @@ font-weight:700;
 
         
         .category-tab.remote-focus,
-        .channel-item.remote-focus{
+        .channel-item.remote-focus,
+        #search-input.remote-focus{
             border:2px solid #f97316 !important;
             transform:scale(1.05) !important;
             box-shadow:0 0 14px rgba(249,115,22,.45);
@@ -2077,26 +2078,8 @@ font-weight:700;
             if (window.stallInterval) clearInterval(window.stallInterval);
             const url = channel.url;
             currentPlayingUrl = url;
-
-            // Stall detection — chỉ reload khi stall nghiêm trọng (không nudge để tránh audio pop)
-            let lastVideoTime = -1;
-            let stallCount = 0;
-            window.stallInterval = setInterval(() => {
-                if (!videoPlayer.paused && currentPlayingUrl === url) {
-                    if (videoPlayer.currentTime === lastVideoTime) {
-                        stallCount++;
-                        // Stall nghiêm trọng ~10s → reload kênh
-                        if (stallCount >= 20) {
-                            console.warn("Serious stall detected, forced reload...");
-                            stallCount = 0;
-                            playChannel(channel);
-                        }
-                    } else {
-                        stallCount = 0;
-                    }
-                    lastVideoTime = videoPlayer.currentTime;
-                }
-            }, 500);
+            // TV365 V6: không tự gọi lại playChannel theo currentTime.
+            // Hls.js/Shaka tự quản lý buffer để tránh vòng lặp reload trên Android TV.
 
             // UI Update
             playerOverlay.style.opacity = '0';
@@ -2133,7 +2116,8 @@ font-weight:700;
             let resolvedUrl = url;
             const needsResolve = url.includes('.php') || url.includes('vietanhtv') || url.includes('tv360') || url.includes('vieon') || url.includes('hoiquan') || url.includes('/play/') || url.includes('dpdns.org');
             if (needsResolve) {
-                if (resolveEnabled) {
+                const forceResolve = /\.php(?:\?|$)/i.test(url) || url.includes('vietanhtv');
+                if (resolveEnabled || forceResolve) {
                     // === CHẾ ĐỘ BẬT: Fetch + parse response để tìm stream URL ===
                     loadingOverlay.classList.remove('hidden');
                     const statusEl = document.getElementById('resolve-status');
@@ -2495,178 +2479,96 @@ font-weight:700;
             }
             // --- Case 2: HLS / M3U8 (Using Hls.js) ---
             else if (typeof Hls !== 'undefined' && Hls.isSupported() && !isMPD) {
+                // Cấu hình HLS ổn định: không ép reload kênh, không swap codec liên tục.
                 hlsInstance = new Hls({
-                    enableWorker: false,             // Tắt worker trên Windows để tránh lệch clock âm thanh
+                    enableWorker: true,
                     lowLatencyMode: false,
-                    backBufferLength: 10,
-                    maxBufferLength: 30,
-                    maxMaxBufferLength: 60,
+                    backBufferLength: 30,
+                    maxBufferLength: 24,
+                    maxMaxBufferLength: 48,
                     maxBufferSize: 60 * 1000 * 1000,
-                    manifestLoadingMaxRetry: 10,
+                    maxBufferHole: 1.0,
+                    liveSyncDurationCount: 3,
+                    liveMaxLatencyDurationCount: 10,
+                    manifestLoadingMaxRetry: 4,
                     manifestLoadingRetryDelay: 1000,
-                    manifestLoadingMaxRetryTimeout: 64000,
-                    levelLoadingMaxRetry: 10,
-                    fragLoadingMaxRetry: 10,
+                    levelLoadingMaxRetry: 4,
+                    fragLoadingMaxRetry: 6,
                     fragLoadingRetryDelay: 1000,
                     startLevel: -1,
-                    // === ABR Tuning ===
-                    abrEwmaFastLive: 3,
-                    abrEwmaSlowLive: 9,
-                    abrEwmaFastVoD: 3,
-                    abrEwmaSlowVoD: 9,
-                    abrBandWidthFactor: 0.7,
-                    abrBandWidthUpFactor: 0.5,
-                    abrMaxWithRealBitrate: true,
-                    abrEwmaDefaultEstimate: 500000,
-                    abrEwmaDefaultEstimateMax: 5000000,
-                    // === Discontinuity / Anti-distortion ===
-                    liveSyncDurationCount: 3,
-                    liveMaxLatencyDurationCount: 6,
-                    stretchShortVideoTrack: true,
-                    maxBufferHole: 0.5,              // Giữ buffer hole vừa phải, tránh nhảy timeline trên Android TV
-                    highBufferWatchdogPeriod: 5,
-                    forceKeyFrameOnDiscontinuity: true,
-                    progressive: false,
-                    // === Audio Sync Tuning ===
-                    maxAudioFramesDrift: 3,          // Cho phép sai lệch nhỏ để WebView TV không liên tục reset audio
-                    initialLiveManifestSize: 3,
+                    capLevelToPlayerSize: true
                 });
 
                 hlsInstance.loadSource(resolvedUrl);
                 hlsInstance.attachMedia(videoPlayer);
 
                 hlsInstance.on(Hls.Events.MANIFEST_PARSED, () => {
-                    videoPlayer.play().catch(e => {
+                    videoPlayer.play().catch(() => {
                         showToast('Nhấn nút Play để chạy luồng.', 'warning');
                         loadingOverlay.classList.add('hidden');
                     });
 
-                    // === Kiểm tra Audio-Only từ HLS manifest (chính xác nhất) ===
-                    if (hlsInstance.levels && hlsInstance.levels.length > 0) {
-                        const allAudioOnly = hlsInstance.levels.every(l => !l.videoCodec || l.videoCodec === '');
-                        if (allAudioOnly) {
-                            showAudioVisualizer(channel);
-                        }
-                    }
-
-                    // Populate quality selector from HLS levels
                     const qualitySelector = document.getElementById('quality-selector');
                     if (hlsInstance.levels && hlsInstance.levels.length > 1) {
-                        const currentLvl = hlsInstance.levels[hlsInstance.currentLevel] || hlsInstance.levels[0];
-                        const initH = currentLvl ? currentLvl.height : 0;
-                        qualitySelector.innerHTML = `<option value="-1">Auto${initH ? ' (' + initH + 'p)' : ''}</option>`;
-                        hlsInstance.levels.forEach((level, i) => {
-                            const opt = document.createElement('option');
-                            opt.value = i;
-                            opt.textContent = level.height ? `${level.height}p` : `Chất lượng ${i + 1}`;
-                            qualitySelector.appendChild(opt);
-                        });
+                        qualitySelector.innerHTML = '<option value="-1">Auto</option>';
+                        [...new Set(hlsInstance.levels.map(l => l.height).filter(h => h > 0))]
+                            .sort((a, b) => b - a)
+                            .forEach(h => {
+                                const opt = document.createElement('option');
+                                opt.value = h;
+                                opt.textContent = `${h}p`;
+                                qualitySelector.appendChild(opt);
+                            });
                         qualitySelector.classList.remove('hidden');
-                    } else {
-                        const h = hlsInstance.levels && hlsInstance.levels.length === 1 ? hlsInstance.levels[0].height : 0;
-                        qualitySelector.innerHTML = `<option value="0" id="single-quality-opt">${h ? h + 'p' : 'Đang tải...'}</option>`;
+                    } else if (hlsInstance.levels && hlsInstance.levels.length === 1) {
+                        const h = hlsInstance.levels[0].height || 0;
+                        qualitySelector.innerHTML = `<option value="0">${h ? h + 'p' : 'Auto'}</option>`;
                         qualitySelector.classList.remove('hidden');
-
-                        videoPlayer.addEventListener('resize', function updateRes() {
-                            const realHeight = videoPlayer.videoHeight;
-                            const opt = document.getElementById('single-quality-opt');
-                            if (realHeight && opt && opt.textContent === 'Đang tải...') {
-                                opt.textContent = `${realHeight}p`;
-                                videoPlayer.removeEventListener('resize', updateRes);
-                            }
-                        });
                     }
                 });
 
-                // === Cập nhật dropdown khi ABR tự chuyển level ===
                 hlsInstance.on(Hls.Events.LEVEL_SWITCHED, (event, data) => {
                     const qualitySelector = document.getElementById('quality-selector');
-                    if (!qualitySelector) return;
-                    if (hlsInstance.autoLevelEnabled && qualitySelector.value === '-1') {
-                        const level = hlsInstance.levels[data.level];
-                        const h = level ? level.height : 0;
-                        const autoOpt = qualitySelector.querySelector('option[value="-1"]');
-                        if (autoOpt) {
-                            autoOpt.textContent = h ? `Auto (${h}p)` : 'Auto';
-                        }
-                    }
+                    if (!qualitySelector || qualitySelector.value !== '-1') return;
+                    const level = hlsInstance.levels[data.level];
+                    const autoOpt = qualitySelector.querySelector('option[value="-1"]');
+                    if (autoOpt) autoOpt.textContent = level && level.height ? `Auto (${level.height}p)` : 'Auto';
                 });
 
-
-
-                // === Live Edge Auto-Recovery (Anti audio drift) ===
-                // Chỉ setup 1 lần khi phát hiện live stream
-                let liveEdgeSetup = false;
-                hlsInstance.on(Hls.Events.LEVEL_LOADED, (event, data) => {
-                    if (data.details && data.details.live && !liveEdgeSetup) {
-                        liveEdgeSetup = true;
-                        if (liveEdgeCheckInterval) clearInterval(liveEdgeCheckInterval);
-                        liveEdgeCheckInterval = setInterval(() => {
-                            if (!hlsInstance || !hlsInstance.liveSyncPosition) return;
-                            const liveEdge = hlsInstance.liveSyncPosition;
-                            const currentPos = videoPlayer.currentTime;
-                            const drift = liveEdge - currentPos;
-
-                            // Nếu trễ hơn 15 giây so với live edge → seek nhẹ nhàng
-                            if (drift > 15 && !videoPlayer.paused) {
-                                console.warn(`[Audio Fix] Drift ${drift.toFixed(1)}s, seeking to live edge...`);
-                                videoPlayer.currentTime = liveEdge - 2; // Về cách live edge 2s
-                            }
-                        }, 30000);
-                    }
-                });
-
-                // === Xử lý khi qua discontinuity (quảng cáo/chuyển bài) ===
-                hlsInstance.on(Hls.Events.FRAG_CHANGED, (event, data) => {
-                    if (data.frag && data.frag.tagList && data.frag.tagList.includes('DISCONTINUITY')) {
-                        console.warn('[Audio-Fix] Discontinuity detected, letting Hls.js sync...');
-                    }
-                });
-                let hlsErrorRecoveries = 0;
-                let hlsNetworkRecoveries = 0;
+                let networkRecoveries = 0;
+                let mediaRecoveries = 0;
 
                 hlsInstance.on(Hls.Events.ERROR, (event, data) => {
-                    if (data.fatal) {
-                        switch (data.type) {
-                            case Hls.ErrorTypes.NETWORK_ERROR:
-                                console.warn('HLS network error, retrying...', data.details);
-                                if (hlsNetworkRecoveries < 5) {
-                                    hlsNetworkRecoveries++;
-                                    hlsInstance.startLoad();
-                                } else if (hlsErrorRecoveries < 2) {
-                                    hlsErrorRecoveries++;
-                                    hlsNetworkRecoveries = 0;
-                                    hlsInstance.startLoad();
-                                } else {
-                                    showToast('Lỗi mạng kéo dài, đang tải lại luồng...', 'warning');
-                                    setTimeout(() => { if (currentPlayingUrl === url) playChannel(channel); }, 5000);
-                                }
-                                break;
-                            case Hls.ErrorTypes.MEDIA_ERROR:
-                                console.warn('HLS media error, recovering...', data.details);
-                                if (hlsErrorRecoveries < 3) {
-                                    hlsErrorRecoveries++;
-                                    hlsInstance.recoverMediaError();
-                                } else if (hlsErrorRecoveries === 3) {
-                                    hlsErrorRecoveries++;
-                                    hlsInstance.swapAudioCodec();
-                                    hlsInstance.recoverMediaError();
-                                } else {
-                                    showToast('Lỗi dữ liệu luồng không thể phục hồi, đang tải lại...', 'error');
-                                    setTimeout(() => { if (currentPlayingUrl === url) playChannel(channel); }, 5000);
-                                }
-                                break;
-                            default:
-                                console.error('HLS Fatal Error:', data);
-                                hlsInstance.destroy();
-                                setTimeout(() => {
-                                    if (currentPlayingUrl === url) playChannel(channel);
-                                }, 5000);
-                                break;
-                        }
-                    }
-                });
+                    if (!data.fatal || !hlsInstance || currentPlayingUrl !== url) return;
 
+                    if (data.type === Hls.ErrorTypes.NETWORK_ERROR) {
+                        console.warn('[TV365 HLS] Network fatal:', data.details);
+                        if (networkRecoveries < 3) {
+                            networkRecoveries++;
+                            hlsInstance.startLoad();
+                        } else {
+                            loadingOverlay.classList.remove('hidden');
+                            showToast('Luồng đang chậm, vui lòng chọn lại kênh.', 'warning');
+                        }
+                        return;
+                    }
+
+                    if (data.type === Hls.ErrorTypes.MEDIA_ERROR) {
+                        console.warn('[TV365 HLS] Media fatal:', data.details);
+                        if (mediaRecoveries < 1) {
+                            mediaRecoveries++;
+                            hlsInstance.recoverMediaError();
+                        } else {
+                            loadingOverlay.classList.remove('hidden');
+                            showToast('Luồng chưa ổn định, vui lòng chọn lại kênh.', 'warning');
+                        }
+                        return;
+                    }
+
+                    console.error('[TV365 HLS] Fatal:', data);
+                    loadingOverlay.classList.remove('hidden');
+                    showToast('Không thể tiếp tục phát. Vui lòng chọn lại kênh.', 'error');
+                });
             }
             // --- Case 3: Raw MPEG-TS stream (Using mpegts.js) ---
             else if (typeof mpegts !== 'undefined' && mpegts.isSupported() && isRawTS) {
@@ -2826,7 +2728,7 @@ function __tvRequestFullscreen() {
 }
 
 // ================= TV365 REMOTE - SINGLE HANDLER =================
-let remoteArea = "tabs";
+let remoteArea = "tabs"; // search | tabs | list
 let tabIndex = 0;
 let channelIndex = 0;
 let lastChannelByTab = {};
@@ -2840,13 +2742,31 @@ function getChannels() {
 }
 
 function clearRemoteFocus() {
-    document.querySelectorAll(".remote-focus").forEach(el => {
-        el.classList.remove("remote-focus");
-    });
+    document.querySelectorAll(".remote-focus").forEach(el => el.classList.remove("remote-focus"));
+}
+
+function leaveSearch() {
+    const search = document.getElementById("search-input");
+    if (!search) return;
+    search.blur();
+    try { window.getSelection()?.removeAllRanges(); } catch (_) {}
 }
 
 function updateRemoteFocus() {
     clearRemoteFocus();
+    const search = document.getElementById("search-input");
+
+    if (remoteArea === "search") {
+        if (!search) {
+            remoteArea = "tabs";
+            return updateRemoteFocus();
+        }
+        search.classList.add("remote-focus");
+        search.scrollIntoView({ block: "nearest" });
+        return;
+    }
+
+    leaveSearch();
 
     if (remoteArea === "tabs") {
         const tabs = getTabs();
@@ -2861,8 +2781,7 @@ function updateRemoteFocus() {
     const items = getChannels();
     if (!items.length) {
         remoteArea = "tabs";
-        updateRemoteFocus();
-        return;
+        return updateRemoteFocus();
     }
 
     channelIndex = Math.max(0, Math.min(channelIndex, items.length - 1));
@@ -2871,57 +2790,66 @@ function updateRemoteFocus() {
     target.scrollIntoView({ behavior: "smooth", block: "center" });
 }
 
+function enterSearch() {
+    const search = document.getElementById("search-input");
+    if (!search) return;
+    remoteArea = "search";
+    clearRemoteFocus();
+    search.classList.add("remote-focus");
+    search.focus({ preventScroll: true });
+    const len = search.value.length;
+    try { search.setSelectionRange(len, len); } catch (_) {}
+}
+
+// MainActivity gọi hàm này sau khi đóng hộp thoại thoát.
+window.TV365_RESET_TV_FOCUS = function () {
+    leaveSearch();
+    remoteArea = "tabs";
+    updateRemoteFocus();
+};
+
 document.addEventListener("keydown", function (e) {
     const search = document.getElementById("search-input");
     const active = document.activeElement;
-
-    // Khi đang gõ tìm kiếm: giữ bàn phím bình thường.
-    // ArrowDown thoát ô tìm kiếm và đi vào khu vực remote.
-    if (active === search) {
-        if (e.key !== "ArrowDown") return;
-        search.blur();
-        remoteArea = "tabs";
-        updateRemoteFocus();
-        e.preventDefault();
-        e.stopImmediatePropagation();
-        return;
-    }
-
-    if (active && (active.tagName === "INPUT" || active.tagName === "SELECT")) return;
-
-    const tabs = getTabs();
-    const items = getChannels();
     const key = e.key;
 
-    if (!["ArrowLeft", "ArrowRight", "ArrowDown", "ArrowUp", "Enter", "OK"].includes(key)) {
+    // Chỉ nhập/xóa chữ khi người dùng đã bấm OK để vào ô tìm kiếm.
+    if (active === search) {
+        if (key === "ArrowDown" || key === "Escape") {
+            leaveSearch();
+            remoteArea = "tabs";
+            updateRemoteFocus();
+            e.preventDefault();
+            e.stopImmediatePropagation();
+        }
         return;
     }
+
+    if (active && active.tagName === "SELECT") return;
+
+    if (!["ArrowLeft", "ArrowRight", "ArrowDown", "ArrowUp", "Enter", "OK"].includes(key)) return;
 
     e.preventDefault();
     e.stopImmediatePropagation();
 
-    if (key === "ArrowLeft") {
-        if (remoteArea === "tabs") {
-            tabIndex = Math.max(0, tabIndex - 1);
-        } else {
-            remoteArea = "tabs";
-        }
-        updateRemoteFocus();
-        return;
-    }
+    const tabs = getTabs();
+    const items = getChannels();
 
-    if (key === "ArrowRight") {
-        if (remoteArea === "tabs") {
-            tabIndex = Math.min(Math.max(0, tabs.length - 1), tabIndex + 1);
-        } else {
-            remoteArea = "tabs";
+    if (key === "ArrowUp") {
+        if (remoteArea === "list") {
+            if (channelIndex > 0) channelIndex--;
+            else remoteArea = "tabs";
+        } else if (remoteArea === "tabs") {
+            remoteArea = "search";
         }
         updateRemoteFocus();
         return;
     }
 
     if (key === "ArrowDown") {
-        if (remoteArea === "tabs") {
+        if (remoteArea === "search") {
+            remoteArea = "tabs";
+        } else if (remoteArea === "tabs") {
             remoteArea = "list";
             channelIndex = lastChannelByTab[tabIndex] ?? 0;
         } else {
@@ -2931,16 +2859,26 @@ document.addEventListener("keydown", function (e) {
         return;
     }
 
-    if (key === "ArrowUp") {
-        if (remoteArea === "list") {
-            if (channelIndex > 0) channelIndex--;
-            else remoteArea = "tabs";
-            updateRemoteFocus();
-        }
+    if (key === "ArrowLeft") {
+        if (remoteArea === "tabs") tabIndex = Math.max(0, tabIndex - 1);
+        else if (remoteArea === "list") remoteArea = "tabs";
+        updateRemoteFocus();
+        return;
+    }
+
+    if (key === "ArrowRight") {
+        if (remoteArea === "tabs") tabIndex = Math.min(Math.max(0, tabs.length - 1), tabIndex + 1);
+        else if (remoteArea === "list") remoteArea = "tabs";
+        updateRemoteFocus();
         return;
     }
 
     if (key === "Enter" || key === "OK") {
+        if (remoteArea === "search") {
+            enterSearch();
+            return;
+        }
+
         if (remoteArea === "tabs") {
             const tab = tabs[tabIndex];
             if (!tab) return;
@@ -2956,15 +2894,20 @@ document.addEventListener("keydown", function (e) {
         const item = items[channelIndex];
         if (!item) return;
         lastChannelByTab[tabIndex] = channelIndex;
+        leaveSearch();
 
-        // Fullscreen được gọi ngay trong thao tác OK/Enter để Android TV chấp nhận user gesture.
-        __tvRequestFullscreen();
+        // Gọi đúng hàm fullscreen của player ngay trong user gesture của nút OK.
+        try { toggleFullscreen(); } catch (_) {}
         item.click();
     }
 }, true);
 
 window.addEventListener("load", function () {
-    setTimeout(updateRemoteFocus, 500);
+    setTimeout(function () {
+        leaveSearch();
+        remoteArea = "tabs";
+        updateRemoteFocus();
+    }, 500);
 });
 
 const __render = window.renderChannelsExplicit;
