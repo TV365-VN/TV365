@@ -2117,38 +2117,6 @@ font-weight:700;
         }
 
         async function playChannel(channel) {
-            const nativeName = String(channel?.name || '').replace(/\s+/g, '').toUpperCase();
-            const useAndroidNative =
-                (nativeName === 'SCTV5' || nativeName === 'SCTV10') &&
-                window.TV365Native &&
-                typeof window.TV365Native.playNative === 'function';
-
-            if (useAndroidNative) {
-                selectedChannelId = channel.id || channel.name;
-                currentPlayingUrl = channel.url;
-                filterChannels();
-                loadingOverlay.classList.remove('hidden');
-
-                try {
-                    window.TV365Native.playNative(
-                        String(channel.url || ''),
-                        String(channel.name || '')
-                    );
-                } catch (e) {
-                    console.error('[Native Player] Bridge error:', e);
-                    loadingOverlay.classList.add('hidden');
-                    showToast('Không mở được player native.', 'error');
-                }
-                return;
-            }
-
-            if (
-                window.TV365Native &&
-                typeof window.TV365Native.stopNative === 'function'
-            ) {
-                try { window.TV365Native.stopNative(); } catch (_) {}
-            }
-
             enterTvFullscreenNow();
 
             selectedChannelId = channel.id || channel.name;
@@ -2867,24 +2835,52 @@ font-weight:700;
     setTimeout(() => fetchEPG(), 100);
 });
 
-async function startTV365() {
-    try {
+let tv365StartupLoading = false;
 
-        const PLAYLIST =
+async function startTV365() {
+    if (tv365StartupLoading || allChannels.length > 0) return;
+
+    tv365StartupLoading = true;
+
+    const PLAYLIST =
         "https://raw.githubusercontent.com/TV365-VN/TV365-DATA/refs/heads/main/error.m3u";
 
-        await loadPredefinedUrl(PLAYLIST);
+    const btn = document.querySelector('button[onclick="openAddDialog()"]');
+    if (btn) btn.style.display = "none";
 
-        const btn = document.querySelector('button[onclick="openAddDialog()"]');
-        if (btn) btn.remove();
+    for (let attempt = 1; attempt <= 4; attempt++) {
+        try {
+            const urlInput = document.getElementById("url-input");
+            if (urlInput) urlInput.value = PLAYLIST;
 
-        const dialog = document.getElementById("add-dialog");
-        if (dialog) dialog.remove();
+            await loadFromUrl();
 
-    } catch (e) {
-        console.log(e);
+            if (allChannels.length > 0) {
+                filterChannels();
+
+                const dialog = document.getElementById("add-dialog");
+                if (dialog) dialog.remove();
+
+                tv365StartupLoading = false;
+                return;
+            }
+        } catch (e) {
+            console.warn("[TV365 START] Lần " + attempt + " lỗi:", e);
+        }
+
+        await new Promise(resolve => setTimeout(resolve, attempt * 700));
     }
+
+    tv365StartupLoading = false;
+
+    if (btn) btn.style.display = "";
+
+    showToast("Chưa tải được danh sách kênh. Vui lòng kiểm tra mạng.", "warning");
 }
+
+document.addEventListener("DOMContentLoaded", function () {
+    setTimeout(startTV365, 50);
+});
 
 </script>
 
@@ -2913,7 +2909,7 @@ function __tvRequestFullscreen() {
     } catch (_) {}
 }
 
-// ================= TV365 REMOTE - SINGLE HANDLER =================
+// ================= TV365 REMOTE V2 - ANDROID KEY DRIVER =================
 let remoteArea = "tabs"; // search | tabs | list
 let tabIndex = 0;
 let channelIndex = 0;
@@ -2942,14 +2938,17 @@ function leaveSearch() {
 
 function updateRemoteFocus() {
     if (!__tvIsAndroidTv()) return;
+
     clearRemoteFocus();
     const search = document.getElementById("search-input");
 
     if (remoteArea === "search") {
         if (!search) {
             remoteArea = "tabs";
-            return updateRemoteFocus();
+            updateRemoteFocus();
+            return;
         }
+
         search.classList.add("remote-focus");
         search.scrollIntoView({ block: "nearest" });
         return;
@@ -2960,156 +2959,210 @@ function updateRemoteFocus() {
     if (remoteArea === "tabs") {
         const tabs = getTabs();
         if (!tabs.length) return;
+
         tabIndex = Math.max(0, Math.min(tabIndex, tabs.length - 1));
-        const target = tabs[tabIndex];
-        target.classList.add("remote-focus");
-        target.scrollIntoView({ behavior: "auto", inline: "center", block: "nearest" });
+        tabs[tabIndex].classList.add("remote-focus");
         return;
     }
 
     const items = getChannels();
+
     if (!items.length) {
         remoteArea = "tabs";
-        return updateRemoteFocus();
+        updateRemoteFocus();
+        return;
     }
 
     channelIndex = Math.max(0, Math.min(channelIndex, items.length - 1));
+
     const target = items[channelIndex];
     target.classList.add("remote-focus");
-    target.scrollIntoView({ behavior: "auto", block: "nearest" });
+
+    const top = target.offsetTop - 20;
+    const list = target.closest(".channel-list");
+
+    if (list) {
+        const itemTop = target.offsetTop;
+        const itemBottom = itemTop + target.offsetHeight;
+        const viewTop = list.scrollTop;
+        const viewBottom = viewTop + list.clientHeight;
+
+        if (itemTop < viewTop) {
+            list.scrollTop = Math.max(0, itemTop - 12);
+        } else if (itemBottom > viewBottom) {
+            list.scrollTop = itemBottom - list.clientHeight + 12;
+        }
+    }
 }
 
 function enterSearch() {
     const search = document.getElementById("search-input");
     if (!search) return;
+
     remoteArea = "search";
     clearRemoteFocus();
     search.classList.add("remote-focus");
+    search.readOnly = false;
     search.focus({ preventScroll: true });
+    search.click();
+
     const len = search.value.length;
     try { search.setSelectionRange(len, len); } catch (_) {}
+
+    try {
+        if (window.TV365App && typeof window.TV365App.openKeyboard === "function") {
+            window.TV365App.openKeyboard();
+        }
+    } catch (_) {}
 }
 
 window.TV365_RESET_TV_FOCUS = function () {
-    leaveSearch();
-    remoteArea = "tabs";
-    updateRemoteFocus();
-};
-
-document.addEventListener("keydown", function (e) {
-    if (!__tvIsAndroidTv()) return;
-
     const search = document.getElementById("search-input");
-    const active = document.activeElement;
-    const code = e.keyCode || e.which;
-    const keyMap = {
-        19: "ArrowUp", 20: "ArrowDown", 21: "ArrowLeft", 22: "ArrowRight",
-        23: "Enter", 66: "Enter"
-    };
-    const key = keyMap[code] || e.key;
 
-    if (active === search) {
-        if (key === "ArrowDown") {
-            leaveSearch();
-            remoteArea = "tabs";
-            updateRemoteFocus();
-            e.preventDefault();
-            e.stopImmediatePropagation();
-        }
-        return;
+    if (search) {
+        search.readOnly = true;
+        search.blur();
     }
 
-    if (active && active.tagName === "SELECT") return;
-    if (!["ArrowLeft", "ArrowRight", "ArrowDown", "ArrowUp", "Enter", "OK"].includes(key)) return;
+    remoteArea = "tabs";
+    tabIndex = Math.max(0, Math.min(tabIndex, getTabs().length - 1));
+    updateRemoteFocus();
 
-    e.preventDefault();
-    e.stopImmediatePropagation();
+    setTimeout(() => {
+        if (search) search.readOnly = false;
+    }, 700);
+};
 
+window.TV365_HANDLE_REMOTE_KEY = function (code) {
+    if (!__tvIsAndroidTv()) return false;
+
+    const search = document.getElementById("search-input");
     const tabs = getTabs();
     const items = getChannels();
 
-    if (key === "ArrowLeft") {
-        if (remoteArea === "tabs") tabIndex = Math.max(0, tabIndex - 1);
-        else if (remoteArea === "list") remoteArea = "tabs";
-        updateRemoteFocus();
-        return;
+    // Khi đang thật sự gõ tìm kiếm, phím xuống thoát ô tìm kiếm.
+    if (document.activeElement === search) {
+        if (code === 20) {
+            leaveSearch();
+            remoteArea = "tabs";
+            updateRemoteFocus();
+            return true;
+        }
+
+        return false;
     }
 
-    if (key === "ArrowRight") {
-        if (remoteArea === "tabs") tabIndex = Math.min(Math.max(0, tabs.length - 1), tabIndex + 1);
-        else if (remoteArea === "list") remoteArea = "tabs";
+    if (code === 21) { // LEFT
+        if (remoteArea === "tabs") {
+            tabIndex = Math.max(0, tabIndex - 1);
+        } else if (remoteArea === "list") {
+            remoteArea = "tabs";
+        }
+
         updateRemoteFocus();
-        return;
+        return true;
     }
 
-    if (key === "ArrowDown") {
-        if (remoteArea === "search") remoteArea = "tabs";
-        else if (remoteArea === "tabs") {
+    if (code === 22) { // RIGHT
+        if (remoteArea === "tabs") {
+            tabIndex = Math.min(Math.max(0, tabs.length - 1), tabIndex + 1);
+        } else if (remoteArea === "list") {
+            remoteArea = "tabs";
+        }
+
+        updateRemoteFocus();
+        return true;
+    }
+
+    if (code === 20) { // DOWN
+        if (remoteArea === "search") {
+            remoteArea = "tabs";
+        } else if (remoteArea === "tabs") {
             remoteArea = "list";
             channelIndex = lastChannelByTab[tabIndex] ?? 0;
-        } else channelIndex = Math.min(Math.max(0, items.length - 1), channelIndex + 1);
+        } else {
+            channelIndex = Math.min(
+                Math.max(0, items.length - 1),
+                channelIndex + 1
+            );
+        }
+
         updateRemoteFocus();
-        return;
+        return true;
     }
 
-    if (key === "ArrowUp") {
+    if (code === 19) { // UP
         if (remoteArea === "list") {
-            if (channelIndex > 0) channelIndex--;
-            else remoteArea = "tabs";
+            if (channelIndex > 0) {
+                channelIndex--;
+            } else {
+                remoteArea = "tabs";
+            }
         } else if (remoteArea === "tabs") {
             remoteArea = "search";
         }
+
         updateRemoteFocus();
-        return;
+        return true;
     }
 
-    if (key === "Enter" || key === "OK") {
+    if (code === 23 || code === 66) { // OK / ENTER
         if (remoteArea === "search") {
             enterSearch();
-            return;
+            return true;
         }
 
         if (remoteArea === "tabs") {
             const tab = tabs[tabIndex];
-            if (!tab) return;
+            if (!tab) return true;
+
             tab.click();
             channelIndex = lastChannelByTab[tabIndex] ?? 0;
             remoteArea = "list";
-            updateRemoteFocus();
-            return;
+
+            requestAnimationFrame(updateRemoteFocus);
+            return true;
         }
 
         const item = items[channelIndex];
-        if (!item) return;
+        if (!item) return true;
 
         lastChannelByTab[tabIndex] = channelIndex;
-        remoteArea = "list";
         leaveSearch();
+
         if (search) {
             search.readOnly = true;
-            setTimeout(() => { search.readOnly = false; }, 900);
+            setTimeout(() => { search.readOnly = false; }, 1000);
         }
-        document.body.focus({ preventScroll: true });
+
         enterTvFullscreenNow();
         item.click();
+        return true;
     }
-}, true);
+
+    return false;
+};
 
 window.addEventListener("load", function () {
-    setTimeout(updateRemoteFocus, 500);
+    setTimeout(updateRemoteFocus, 250);
 });
 
 const __render = window.renderChannelsExplicit;
 if (typeof __render === "function") {
     window.renderChannelsExplicit = function (channels) {
         __render(channels);
+
         if (__tvIsAndroidTv()) {
-            setTimeout(function () {
-                if (remoteArea === "list" && channelIndex >= getChannels().length) {
+            requestAnimationFrame(function () {
+                if (
+                    remoteArea === "list" &&
+                    channelIndex >= getChannels().length
+                ) {
                     channelIndex = Math.max(0, getChannels().length - 1);
                 }
+
                 updateRemoteFocus();
-            }, 0);
+            });
         }
     };
 }
