@@ -2662,11 +2662,27 @@ font-weight:700;
                             }
                         });
 
-                        hlsInstance.startLevel = highestLevel;
-                        hlsInstance.currentLevel = highestLevel;
-                        hlsInstance.nextLevel = highestLevel;
-                        hlsInstance.loadLevel = highestLevel;
+                        // Khởi động nhanh: cho HLS tải level phù hợp trước để có hình sớm.
+                        // Ngay khi video phát được, chuyển lên chất lượng cao nhất.
+                        hlsInstance.startLevel = -1;
+                        hlsInstance.currentLevel = -1;
+                        hlsInstance.nextLevel = -1;
+                        hlsInstance.loadLevel = -1;
                         hlsInstance.autoLevelCapping = highestLevel;
+
+                        const tv365GoHighest = () => {
+                            if (!hlsInstance || !hlsInstance.levels?.length) return;
+                            hlsInstance.currentLevel = highestLevel;
+                            hlsInstance.nextLevel = highestLevel;
+                            hlsInstance.loadLevel = highestLevel;
+                            qualitySelector.value = String(highestLevel);
+                        };
+
+                        videoPlayer.addEventListener(
+                            'playing',
+                            tv365GoHighest,
+                            { once: true }
+                        );
                     }
 
                     videoPlayer.play().catch(e => {
