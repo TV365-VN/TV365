@@ -2669,42 +2669,6 @@ font-weight:700;
                         hlsInstance.autoLevelCapping = highestLevel;
                     }
 
-                    if (
-                        tv365AdaptiveProfile().lowDevice &&
-                        hlsInstance.levels?.length
-                    ) {
-                        let best720 = -1;
-
-                        hlsInstance.levels.forEach((level, index) => {
-                            const height = Number(level.height || 0);
-
-                            if (
-                                height > 0 &&
-                                height <= 720 &&
-                                (
-                                    best720 < 0 ||
-                                    height > Number(hlsInstance.levels[best720]?.height || 0)
-                                )
-                            ) {
-                                best720 = index;
-                            }
-                        });
-
-                        if (best720 >= 0) {
-                            hlsInstance.startLevel = best720;
-                            hlsInstance.nextLevel = best720;
-
-                            // Sau 45 giây ổn định, trả lại AUTO.
-                            // Nếu mạng/decoder đủ khỏe Hls.js có thể tăng lại 1080p.
-                            setTimeout(() => {
-                                if (hlsInstance) {
-                                    hlsInstance.nextLevel = -1;
-                                    hlsInstance.loadLevel = -1;
-                                }
-                            }, 45000);
-                        }
-                    }
-
                     videoPlayer.play().catch(e => {
                         showToast('Nhấn nút Play để chạy luồng.', 'warning');
                         loadingOverlay.classList.add('hidden');
@@ -2730,6 +2694,7 @@ font-weight:700;
                             opt.textContent = level.height ? `${level.height}p` : `Chất lượng ${i + 1}`;
                             qualitySelector.appendChild(opt);
                         });
+                        qualitySelector.value = String(highestLevel);
                         qualitySelector.classList.remove('hidden');
                     } else {
                         const h = hlsInstance.levels && hlsInstance.levels.length === 1 ? hlsInstance.levels[0].height : 0;
