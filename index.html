@@ -2701,6 +2701,7 @@ font-weight:700;
                     // Populate quality selector from HLS levels
                     const qualitySelector = document.getElementById('quality-selector');
                     if (hlsInstance.levels && hlsInstance.levels.length > 1) {
+                        qualitySelector.disabled = false;
                         const currentLvl = hlsInstance.levels[hlsInstance.currentLevel] || hlsInstance.levels[0];
                         const initH = currentLvl ? currentLvl.height : 0;
                         qualitySelector.innerHTML = `<option value="-1">Auto${initH ? ' (' + initH + 'p)' : ''}</option>`;
@@ -2713,18 +2714,38 @@ font-weight:700;
                         qualitySelector.value = String(highestLevel);
                         qualitySelector.classList.remove('hidden');
                     } else {
-                        const h = hlsInstance.levels && hlsInstance.levels.length === 1 ? hlsInstance.levels[0].height : 0;
-                        qualitySelector.innerHTML = `<option value="0" id="single-quality-opt">${h ? h + 'p' : 'Đang tải...'}</option>`;
+                        const level = hlsInstance.levels && hlsInstance.levels.length === 1
+                            ? hlsInstance.levels[0]
+                            : null;
+
+                        const manifestHeight = Number(level?.height || 0);
+
+                        qualitySelector.innerHTML =
+                            `<option value="0" id="single-quality-opt">${
+                                manifestHeight ? manifestHeight + 'p' : 'Đang nhận chất lượng...'
+                            }</option>`;
+
+                        qualitySelector.value = "0";
+                        qualitySelector.disabled = true;
                         qualitySelector.classList.remove('hidden');
 
-                        videoPlayer.addEventListener('resize', function updateRes() {
-                            const realHeight = videoPlayer.videoHeight;
+                        const tv365UpdateSingleQuality = () => {
                             const opt = document.getElementById('single-quality-opt');
-                            if (realHeight && opt && opt.textContent === 'Đang tải...') {
-                                opt.textContent = `${realHeight}p`;
-                                videoPlayer.removeEventListener('resize', updateRes);
-                            }
-                        });
+                            if (!opt) return;
+
+                            const realHeight = Number(videoPlayer.videoHeight || 0);
+                            const finalHeight = realHeight || manifestHeight;
+
+                            opt.textContent = finalHeight
+                                ? `${finalHeight}p`
+                                : 'Đang nhận chất lượng...';
+                        };
+
+                        videoPlayer.addEventListener('loadedmetadata', tv365UpdateSingleQuality);
+                        videoPlayer.addEventListener('resize', tv365UpdateSingleQuality);
+                        videoPlayer.addEventListener('playing', tv365UpdateSingleQuality);
+
+                        tv365UpdateSingleQuality();
                     }
                 });
 
