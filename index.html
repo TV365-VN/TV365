@@ -2117,6 +2117,38 @@ font-weight:700;
         }
 
         async function playChannel(channel) {
+            const nativeName = String(channel?.name || '').replace(/\s+/g, '').toUpperCase();
+            const useAndroidNative =
+                (nativeName === 'SCTV5' || nativeName === 'SCTV10') &&
+                window.TV365Native &&
+                typeof window.TV365Native.playNative === 'function';
+
+            if (useAndroidNative) {
+                selectedChannelId = channel.id || channel.name;
+                currentPlayingUrl = channel.url;
+                filterChannels();
+                loadingOverlay.classList.remove('hidden');
+
+                try {
+                    window.TV365Native.playNative(
+                        String(channel.url || ''),
+                        String(channel.name || '')
+                    );
+                } catch (e) {
+                    console.error('[Native Player] Bridge error:', e);
+                    loadingOverlay.classList.add('hidden');
+                    showToast('Không mở được player native.', 'error');
+                }
+                return;
+            }
+
+            if (
+                window.TV365Native &&
+                typeof window.TV365Native.stopNative === 'function'
+            ) {
+                try { window.TV365Native.stopNative(); } catch (_) {}
+            }
+
             enterTvFullscreenNow();
 
             selectedChannelId = channel.id || channel.name;
