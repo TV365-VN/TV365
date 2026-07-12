@@ -454,27 +454,6 @@ font-weight:700;
             transition: width 0.3s;
         }
     
-        body.tv365-instant-fullscreen { overflow: hidden !important; }
-
-        body.tv365-instant-fullscreen .video-container {
-            position: fixed !important;
-            inset: 0 !important;
-            width: 100vw !important;
-            height: 100vh !important;
-            max-width: none !important;
-            max-height: none !important;
-            margin: 0 !important;
-            padding: 0 !important;
-            z-index: 2147483000 !important;
-            background: #000 !important;
-        }
-
-        body.tv365-instant-fullscreen .video-container video {
-            width: 100% !important;
-            height: 100% !important;
-            object-fit: contain !important;
-        }
-    
         body.tv365-tv-mode .channel-item,
         body.tv365-tv-mode .category-tab {
             transition: none !important;
@@ -484,10 +463,6 @@ font-weight:700;
             outline: 3px solid #f97316 !important;
             border-color: #f97316 !important;
             box-shadow: 0 0 18px rgba(249,115,22,.75) !important;
-        }
-
-        body.tv365-tv-mode .channel-item.remote-focus {
-            transform: none !important;
         }
 
 </style>
@@ -2129,46 +2104,22 @@ font-weight:700;
             }
         }
 
-        let tv365PlayerPlaceholder = null;
-        let tv365PlayerParent = null;
-        let tv365PlayerNextSibling = null;
-
-        function tv365IsTvRuntime() {
-            return window.__TV365_REMOTE_ACTIVE__ === true ||
-                /TV365_ANDROID_TV|Android TV|SMART-TV|AFT|BRAVIA/i.test(navigator.userAgent);
-        }
-
         function enterTvFullscreenNow() {
             try {
                 const search = document.getElementById('search-input');
                 if (search) search.blur();
 
-                if (tv365IsTvRuntime()) {
-                    document.body.classList.add('tv365-tv-mode');
-
-                    if (!document.body.classList.contains('tv365-instant-fullscreen')) {
-                        tv365PlayerParent = videoContainer.parentNode;
-                        tv365PlayerNextSibling = videoContainer.nextSibling;
-                        tv365PlayerPlaceholder = document.createComment('TV365_PLAYER_PLACEHOLDER');
-
-                        tv365PlayerParent.insertBefore(
-                            tv365PlayerPlaceholder,
-                            videoContainer
-                        );
-
-                        document.body.appendChild(videoContainer);
-                    }
-
-                    document.body.classList.add('tv365-instant-fullscreen');
+                if (__tvIsAndroidTv()) {
+                    __tvRequestFullscreen();
                     return;
                 }
 
                 if (document.fullscreenElement || document.webkitFullscreenElement) return;
-
-                if (videoContainer.requestFullscreen) {
-                    videoContainer.requestFullscreen().catch(() => {});
-                } else if (videoContainer.webkitRequestFullscreen) {
-                    videoContainer.webkitRequestFullscreen();
+                const target = videoContainer;
+                if (target.requestFullscreen) {
+                    target.requestFullscreen().catch(() => {});
+                } else if (target.webkitRequestFullscreen) {
+                    target.webkitRequestFullscreen();
                 } else if (videoPlayer.webkitEnterFullscreen) {
                     videoPlayer.webkitEnterFullscreen();
                 }
@@ -2177,111 +2128,17 @@ font-weight:700;
             }
         }
 
-        window.TV365_EXIT_TV_FULLSCREEN = function () {
-            const active =
-                document.body.classList.contains('tv365-instant-fullscreen');
+        // === TV365 Adaptive Phone V1 ===
+        function tv365AdaptiveProfile() {
+            const ua = navigator.userAgent || "";
+            const memory = Number(navigator.deviceMemory || 0);
+            const width = Math.min(screen.width || 0, screen.height || 0);
 
-            if (!active) return false;
+            const lowDevice =
+                /CPH2269|OPPO A16/i.test(ua) ||
+                (memory > 0 && memory <= 4 && width <= 720);
 
-            document.body.classList.remove('tv365-instant-fullscreen');
-
-            try {
-                if (
-                    tv365PlayerPlaceholder &&
-                    tv365PlayerPlaceholder.parentNode
-                ) {
-                    tv365PlayerPlaceholder.parentNode.replaceChild(
-                        videoContainer,
-                        tv365PlayerPlaceholder
-                    );
-                } else if (tv365PlayerParent) {
-                    tv365PlayerParent.insertBefore(
-                        videoContainer,
-                        tv365PlayerNextSibling
-                    );
-                }
-            } catch (_) {}
-
-            tv365PlayerPlaceholder = null;
-            tv365PlayerParent = null;
-            tv365PlayerNextSibling = null;
-
-            window.TV365_RESET_TV_FOCUS?.();
-            return true;
-        };
-
-        const tv365ForceHlsJsUrls = new Set();
-
-        function tv365IsHlsUrl(url) {
-            return /\.m3u8(\?|#|$)/i.test(String(url || ""));
-        }
-
-        function tv365TryNativeTvHls(channel, resolvedUrl, url) {
-            if (
-                !tv365IsTvRuntime() ||
-                !tv365IsHlsUrl(resolvedUrl) ||
-                tv365ForceHlsJsUrls.has(url)
-            ) {
-                return false;
-            }
-
-            let settled = false;
-            let fallbackTimer = null;
-
-            const cleanup = () => {
-                clearTimeout(fallbackTimer);
-                videoPlayer.removeEventListener('playing', onPlaying);
-                videoPlayer.removeEventListener('error', onError);
-            };
-
-            const fallbackToHlsJs = () => {
-                if (settled || currentPlayingUrl !== url) return;
-
-                settled = true;
-                cleanup();
-                tv365ForceHlsJsUrls.add(url);
-
-                tv365InternalPause = true;
-                try { videoPlayer.pause(); } catch (_) {}
-                videoPlayer.removeAttribute('src');
-                videoPlayer.load();
-                tv365InternalPause = false;
-
-                playChannel(channel);
-            };
-
-            const onPlaying = () => {
-                if (settled) return;
-                settled = true;
-                cleanup();
-                loadingOverlay.classList.add('hidden');
-            };
-
-            const onError = () => {
-                fallbackToHlsJs();
-            };
-
-            videoPlayer.addEventListener('playing', onPlaying);
-            videoPlayer.addEventListener('error', onError);
-
-            videoPlayer.src = resolvedUrl;
-            videoPlayer.load();
-            videoPlayer.play().catch(() => {});
-
-            fallbackTimer = setTimeout(() => {
-                if (
-                    !settled &&
-                    currentPlayingUrl === url &&
-                    (
-                        videoPlayer.readyState < 2 ||
-                        videoPlayer.paused
-                    )
-                ) {
-                    fallbackToHlsJs();
-                }
-            }, 2800);
-
-            return true;
+            return { lowDevice };
         }
 
         async function playChannel(channel) {
@@ -2687,7 +2544,7 @@ font-weight:700;
 
 
             }
-            // --- Case 2: HLS / M3U8 - giữ player gốc ổn định cho điện thoại, PC và TV ---
+            // --- Case 2: HLS / M3U8 (Using Hls.js) ---
             else if (typeof Hls !== 'undefined' && Hls.isSupported() && !isMPD) {
                 hlsInstance = new Hls({
                     enableWorker: true,
