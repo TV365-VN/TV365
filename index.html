@@ -3040,12 +3040,22 @@ window.TV365_HANDLE_REMOTE_KEY = function (code) {
     const tabs = getTabs();
     const items = getChannels();
 
-    // Khi đang thật sự gõ tìm kiếm, phím xuống thoát ô tìm kiếm.
-    if (document.activeElement === search) {
+    // Chỉ cho ô tìm kiếm giữ focus khi TV365 chủ động vào chế độ search.
+    if (document.activeElement === search && remoteArea !== "search") {
+        leaveSearch();
+    }
+
+    // Khi đang gõ tìm kiếm: DOWN thoát tìm kiếm.
+    // LEFT/RIGHT để di chuyển con trỏ chữ; UP giữ tại ô search.
+    if (document.activeElement === search && remoteArea === "search") {
         if (code === 20) {
             leaveSearch();
             remoteArea = "tabs";
             updateRemoteFocus();
+            return true;
+        }
+
+        if (code === 19) {
             return true;
         }
 
@@ -3144,7 +3154,22 @@ window.TV365_HANDLE_REMOTE_KEY = function (code) {
 };
 
 window.addEventListener("load", function () {
-    setTimeout(updateRemoteFocus, 250);
+    setTimeout(function () {
+        if (__tvIsAndroidTv()) {
+            const search = document.getElementById("search-input");
+            if (search) {
+                search.blur();
+                search.readOnly = true;
+            }
+
+            remoteArea = "tabs";
+            updateRemoteFocus();
+
+            setTimeout(function () {
+                if (search) search.readOnly = false;
+            }, 800);
+        }
+    }, 250);
 });
 
 const __render = window.renderChannelsExplicit;
