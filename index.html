@@ -474,7 +474,23 @@ font-weight:700;
             height: 100% !important;
             object-fit: contain !important;
         }
-    </style>
+    
+        body.tv365-tv-mode .channel-item,
+        body.tv365-tv-mode .category-tab {
+            transition: none !important;
+        }
+
+        #search-input.remote-focus {
+            outline: 3px solid #f97316 !important;
+            border-color: #f97316 !important;
+            box-shadow: 0 0 18px rgba(249,115,22,.75) !important;
+        }
+
+        body.tv365-tv-mode .channel-item.remote-focus {
+            transform: none !important;
+        }
+
+</style>
 </head>
 
 <body class="selection:bg-orange-500/30" onload="startTV365()">
@@ -2113,15 +2129,36 @@ font-weight:700;
             }
         }
 
+        let tv365PlayerPlaceholder = null;
+        let tv365PlayerParent = null;
+        let tv365PlayerNextSibling = null;
+
+        function tv365IsTvRuntime() {
+            return window.__TV365_REMOTE_ACTIVE__ === true ||
+                /TV365_ANDROID_TV|Android TV|SMART-TV|AFT|BRAVIA/i.test(navigator.userAgent);
+        }
+
         function enterTvFullscreenNow() {
             try {
                 const search = document.getElementById('search-input');
                 if (search) search.blur();
 
-                if (
-                    window.__TV365_REMOTE_ACTIVE__ === true ||
-                    /TV365_ANDROID_TV|Android TV|SMART-TV|AFT|BRAVIA/i.test(navigator.userAgent)
-                ) {
+                if (tv365IsTvRuntime()) {
+                    document.body.classList.add('tv365-tv-mode');
+
+                    if (!document.body.classList.contains('tv365-instant-fullscreen')) {
+                        tv365PlayerParent = videoContainer.parentNode;
+                        tv365PlayerNextSibling = videoContainer.nextSibling;
+                        tv365PlayerPlaceholder = document.createComment('TV365_PLAYER_PLACEHOLDER');
+
+                        tv365PlayerParent.insertBefore(
+                            tv365PlayerPlaceholder,
+                            videoContainer
+                        );
+
+                        document.body.appendChild(videoContainer);
+                    }
+
                     document.body.classList.add('tv365-instant-fullscreen');
                     return;
                 }
@@ -2144,13 +2181,108 @@ font-weight:700;
             const active =
                 document.body.classList.contains('tv365-instant-fullscreen');
 
-            if (active) {
-                document.body.classList.remove('tv365-instant-fullscreen');
-                window.TV365_RESET_TV_FOCUS?.();
+            if (!active) return false;
+
+            document.body.classList.remove('tv365-instant-fullscreen');
+
+            try {
+                if (
+                    tv365PlayerPlaceholder &&
+                    tv365PlayerPlaceholder.parentNode
+                ) {
+                    tv365PlayerPlaceholder.parentNode.replaceChild(
+                        videoContainer,
+                        tv365PlayerPlaceholder
+                    );
+                } else if (tv365PlayerParent) {
+                    tv365PlayerParent.insertBefore(
+                        videoContainer,
+                        tv365PlayerNextSibling
+                    );
+                }
+            } catch (_) {}
+
+            tv365PlayerPlaceholder = null;
+            tv365PlayerParent = null;
+            tv365PlayerNextSibling = null;
+
+            window.TV365_RESET_TV_FOCUS?.();
+            return true;
+        };
+
+        const tv365ForceHlsJsUrls = new Set();
+
+        function tv365IsHlsUrl(url) {
+            return /\.m3u8(\?|#|$)/i.test(String(url || ""));
+        }
+
+        function tv365TryNativeTvHls(channel, resolvedUrl, url) {
+            if (
+                !tv365IsTvRuntime() ||
+                !tv365IsHlsUrl(resolvedUrl) ||
+                tv365ForceHlsJsUrls.has(url)
+            ) {
+                return false;
             }
 
-            return active;
-        };
+            let settled = false;
+            let fallbackTimer = null;
+
+            const cleanup = () => {
+                clearTimeout(fallbackTimer);
+                videoPlayer.removeEventListener('playing', onPlaying);
+                videoPlayer.removeEventListener('error', onError);
+            };
+
+            const fallbackToHlsJs = () => {
+                if (settled || currentPlayingUrl !== url) return;
+
+                settled = true;
+                cleanup();
+                tv365ForceHlsJsUrls.add(url);
+
+                tv365InternalPause = true;
+                try { videoPlayer.pause(); } catch (_) {}
+                videoPlayer.removeAttribute('src');
+                videoPlayer.load();
+                tv365InternalPause = false;
+
+                playChannel(channel);
+            };
+
+            const onPlaying = () => {
+                if (settled) return;
+                settled = true;
+                cleanup();
+                loadingOverlay.classList.add('hidden');
+            };
+
+            const onError = () => {
+                fallbackToHlsJs();
+            };
+
+            videoPlayer.addEventListener('playing', onPlaying);
+            videoPlayer.addEventListener('error', onError);
+
+            videoPlayer.src = resolvedUrl;
+            videoPlayer.load();
+            videoPlayer.play().catch(() => {});
+
+            fallbackTimer = setTimeout(() => {
+                if (
+                    !settled &&
+                    currentPlayingUrl === url &&
+                    (
+                        videoPlayer.readyState < 2 ||
+                        videoPlayer.paused
+                    )
+                ) {
+                    fallbackToHlsJs();
+                }
+            }, 2800);
+
+            return true;
+        }
 
         async function playChannel(channel) {
             enterTvFullscreenNow();
@@ -2555,7 +2687,23 @@ font-weight:700;
 
 
             }
-            // --- Case 2: HLS / M3U8 (Using Hls.js) ---
+            // --- Case 2A: Android TV ưu tiên media pipeline native ---
+            else if (
+                tv365IsTvRuntime() &&
+                tv365IsHlsUrl(resolvedUrl) &&
+                !isMPD &&
+                !tv365ForceHlsJsUrls.has(url)
+            ) {
+                const nativeStarted =
+                    tv365TryNativeTvHls(channel, resolvedUrl, url);
+
+                if (!nativeStarted) {
+                    tv365ForceHlsJsUrls.add(url);
+                    playChannel(channel);
+                    return;
+                }
+            }
+            // --- Case 2B: HLS.js fallback ---
             else if (typeof Hls !== 'undefined' && Hls.isSupported() && !isMPD) {
                 hlsInstance = new Hls({
                     enableWorker: true,
@@ -3028,7 +3176,7 @@ function __tvRequestFullscreen() {
     } catch (_) {}
 }
 
-// ================= TV365 DPAD V7 - ONE CONTROLLER =================
+// ================= TV365 DPAD V8 - FAST CONTROLLER =================
 let tv365DpadIndex = 0;
 let tv365DpadMode = "channels";
 let tv365DpadReady = false;
@@ -3065,7 +3213,11 @@ function tv365DpadFocusChannel(index) {
 
     const item = items[tv365DpadIndex];
     item.classList.add("remote-focus");
-    item.scrollIntoView({ behavior: "auto", block: "nearest" });
+    item.scrollIntoView({
+        behavior: "auto",
+        block: "nearest",
+        inline: "nearest"
+    });
 }
 
 function tv365DpadFocusSearch(openKeyboard) {
@@ -3075,6 +3227,10 @@ function tv365DpadFocusSearch(openKeyboard) {
     tv365DpadMode = "search";
     tv365DpadClear();
     search.classList.add("remote-focus");
+    search.scrollIntoView({
+        behavior: "auto",
+        block: "nearest"
+    });
 
     if (openKeyboard) {
         search.readOnly = false;
@@ -3082,7 +3238,6 @@ function tv365DpadFocusSearch(openKeyboard) {
 
         const len = search.value.length;
         try { search.setSelectionRange(len, len); } catch (_) {}
-
         try { window.TV365App?.openKeyboard?.(); } catch (_) {}
     } else {
         search.blur();
@@ -3093,15 +3248,46 @@ function tv365DpadChangeGroup(step) {
     const tabs = tv365DpadTabs();
     if (!tabs.length) return;
 
-    let current = tabs.findIndex(tab => tab.classList.contains("active"));
+    let current = tabs.findIndex(tab =>
+        tab.classList.contains("active")
+    );
+
     if (current < 0) current = 0;
 
-    const next = Math.max(0, Math.min(current + step, tabs.length - 1));
-    if (next === current) return;
+    const next = Math.max(
+        0,
+        Math.min(current + step, tabs.length - 1)
+    );
 
-    tabs[next].click();
+    if (next === current) {
+        tabs[current].scrollIntoView({
+            behavior: "auto",
+            inline: "center",
+            block: "nearest"
+        });
+        return;
+    }
+
+    currentCategory = tabs[next].innerText.trim();
+
+    tabs.forEach((tab, index) => {
+        tab.classList.toggle("active", index === next);
+    });
+
+    filterChannels();
 
     requestAnimationFrame(() => {
+        const newTabs = tv365DpadTabs();
+        const activeTab = newTabs[next];
+
+        if (activeTab) {
+            activeTab.scrollIntoView({
+                behavior: "auto",
+                inline: "center",
+                block: "nearest"
+            });
+        }
+
         tv365DpadIndex = 0;
         tv365DpadFocusChannel(0);
     });
@@ -3109,6 +3295,7 @@ function tv365DpadChangeGroup(step) {
 
 window.TV365_DPAD_INIT = function () {
     window.__TV365_REMOTE_ACTIVE__ = true;
+    document.body.classList.add("tv365-tv-mode");
 
     if (tv365DpadReady) return true;
     tv365DpadReady = true;
@@ -3135,7 +3322,6 @@ window.TV365_DPAD_KEY = function (code) {
 
         if (code === 19) return true;
 
-        // Khi đang gõ: trái/phải/OK để bàn phím và ô chữ xử lý.
         if (code === 21 || code === 22 || code === 23 || code === 66) {
             return false;
         }
@@ -3143,7 +3329,16 @@ window.TV365_DPAD_KEY = function (code) {
 
     if (code === 19) {
         if (tv365DpadMode === "channels") {
-            if (tv365DpadIndex === 0) {
+            const items = tv365DpadChannels();
+            const focusedIndex = items.findIndex(item =>
+                item.classList.contains("remote-focus")
+            );
+
+            if (focusedIndex >= 0) {
+                tv365DpadIndex = focusedIndex;
+            }
+
+            if (tv365DpadIndex <= 0) {
                 tv365DpadFocusSearch(false);
             } else {
                 tv365DpadFocusChannel(tv365DpadIndex - 1);
@@ -3162,12 +3357,16 @@ window.TV365_DPAD_KEY = function (code) {
     }
 
     if (code === 21) {
-        if (tv365DpadMode === "channels") tv365DpadChangeGroup(-1);
+        if (tv365DpadMode === "channels") {
+            tv365DpadChangeGroup(-1);
+        }
         return true;
     }
 
     if (code === 22) {
-        if (tv365DpadMode === "channels") tv365DpadChangeGroup(1);
+        if (tv365DpadMode === "channels") {
+            tv365DpadChangeGroup(1);
+        }
         return true;
     }
 
@@ -3178,7 +3377,13 @@ window.TV365_DPAD_KEY = function (code) {
         }
 
         const item = tv365DpadChannels()[tv365DpadIndex];
-        if (item) item.click();
+
+        if (item) {
+            enterTvFullscreenNow();
+            item.click();
+            enterTvFullscreenNow();
+        }
+
         return true;
     }
 
@@ -3190,26 +3395,12 @@ window.TV365_RESET_TV_FOCUS = function () {
     if (search) search.blur();
 
     tv365DpadMode = "channels";
-    requestAnimationFrame(() => tv365DpadFocusChannel(tv365DpadIndex));
+
+    requestAnimationFrame(() => {
+        tv365DpadFocusChannel(tv365DpadIndex);
+    });
 };
-
-const __tv365RenderV7 = window.renderChannelsExplicit;
-if (typeof __tv365RenderV7 === "function") {
-    window.renderChannelsExplicit = function (channels) {
-        __tv365RenderV7(channels);
-
-        if (tv365DpadReady) {
-            requestAnimationFrame(() => {
-                const items = tv365DpadChannels();
-                if (items.length) {
-                    tv365DpadIndex = Math.min(tv365DpadIndex, items.length - 1);
-                    tv365DpadFocusChannel(tv365DpadIndex);
-                }
-            });
-        }
-    };
-}
-// ================= END TV365 DPAD V7 =================
+// ================= END TV365 DPAD V8 =================
 </script>
 
 </body>
