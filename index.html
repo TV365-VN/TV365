@@ -454,12 +454,9 @@ font-weight:700;
             transition: width 0.3s;
         }
     
-        /* TV365 instant TV fullscreen */
-        body.tv365-tv-fullscreen {
-            overflow: hidden !important;
-        }
+        body.tv365-instant-fullscreen { overflow: hidden !important; }
 
-        body.tv365-tv-fullscreen .video-container {
+        body.tv365-instant-fullscreen .video-container {
             position: fixed !important;
             inset: 0 !important;
             width: 100vw !important;
@@ -467,17 +464,17 @@ font-weight:700;
             max-width: none !important;
             max-height: none !important;
             margin: 0 !important;
+            padding: 0 !important;
             z-index: 2147483000 !important;
             background: #000 !important;
         }
 
-        body.tv365-tv-fullscreen .video-container video {
+        body.tv365-instant-fullscreen .video-container video {
             width: 100% !important;
             height: 100% !important;
             object-fit: contain !important;
         }
-
-</style>
+    </style>
 </head>
 
 <body class="selection:bg-orange-500/30" onload="startTV365()">
@@ -2121,17 +2118,20 @@ font-weight:700;
                 const search = document.getElementById('search-input');
                 if (search) search.blur();
 
-                if (__tvIsAndroidTv()) {
-                    __tvRequestFullscreen();
+                if (
+                    window.__TV365_REMOTE_ACTIVE__ === true ||
+                    /TV365_ANDROID_TV|Android TV|SMART-TV|AFT|BRAVIA/i.test(navigator.userAgent)
+                ) {
+                    document.body.classList.add('tv365-instant-fullscreen');
                     return;
                 }
 
                 if (document.fullscreenElement || document.webkitFullscreenElement) return;
-                const target = videoContainer;
-                if (target.requestFullscreen) {
-                    target.requestFullscreen().catch(() => {});
-                } else if (target.webkitRequestFullscreen) {
-                    target.webkitRequestFullscreen();
+
+                if (videoContainer.requestFullscreen) {
+                    videoContainer.requestFullscreen().catch(() => {});
+                } else if (videoContainer.webkitRequestFullscreen) {
+                    videoContainer.webkitRequestFullscreen();
                 } else if (videoPlayer.webkitEnterFullscreen) {
                     videoPlayer.webkitEnterFullscreen();
                 }
@@ -2140,26 +2140,17 @@ font-weight:700;
             }
         }
 
-        // === TV365 Adaptive Phone V1 ===
-        function tv365AdaptiveProfile() {
-            const ua = navigator.userAgent || "";
-            const memory = Number(navigator.deviceMemory || 0);
-            const width = Math.min(screen.width || 0, screen.height || 0);
+        window.TV365_EXIT_TV_FULLSCREEN = function () {
+            const active =
+                document.body.classList.contains('tv365-instant-fullscreen');
 
-            const lowDevice =
-                /CPH2269|OPPO A16/i.test(ua) ||
-                (memory > 0 && memory <= 4 && width <= 720);
+            if (active) {
+                document.body.classList.remove('tv365-instant-fullscreen');
+                window.TV365_RESET_TV_FOCUS?.();
+            }
 
-            return { lowDevice };
-        }
-
-        function tv365IsVtv1To9(channel) {
-            const name = String(channel?.name || "")
-                .replace(/\s+/g, "")
-                .toUpperCase();
-
-            return /^VTV[1-9](HD)?$/.test(name);
-        }
+            return active;
+        };
 
         async function playChannel(channel) {
             enterTvFullscreenNow();
@@ -2596,18 +2587,11 @@ font-weight:700;
 
                     abrEwmaFastLive: 3,
                     abrEwmaSlowLive: 6,
-                    abrBandWidthFactor:
-                        (__tvIsAndroidTv() && tv365IsVtv1To9(channel))
-                            ? 0.70
-                            : (tv365AdaptiveProfile().lowDevice ? 0.70 : 0.90),
-                    abrBandWidthUpFactor:
-                        (__tvIsAndroidTv() && tv365IsVtv1To9(channel))
-                            ? 0.55
-                            : (tv365AdaptiveProfile().lowDevice ? 0.55 : 0.80),
-                    abrEwmaDefaultEstimate:
-                        (__tvIsAndroidTv() && tv365IsVtv1To9(channel))
-                            ? 2200000
-                            : (tv365AdaptiveProfile().lowDevice ? 1800000 : 8000000),
+                    abrBandWidthFactor: tv365AdaptiveProfile().lowDevice ? 0.70 : 0.90,
+                    abrBandWidthUpFactor: tv365AdaptiveProfile().lowDevice ? 0.55 : 0.80,
+                    abrEwmaDefaultEstimate: tv365AdaptiveProfile().lowDevice
+                        ? 1800000
+                        : 8000000,
                     abrEwmaDefaultEstimateMax: tv365AdaptiveProfile().lowDevice
                         ? 8000000
                         : 20000000,
@@ -2624,46 +2608,6 @@ font-weight:700;
                 hlsInstance.attachMedia(videoPlayer);
 
                 hlsInstance.on(Hls.Events.MANIFEST_PARSED, () => {
-                    if (
-                        __tvIsAndroidTv() &&
-                        tv365IsVtv1To9(channel) &&
-                        hlsInstance.levels?.length
-                    ) {
-                        let tvStartLevel = -1;
-
-                        hlsInstance.levels.forEach((level, index) => {
-                            const height = Number(level.height || 0);
-
-                            if (
-                                height > 0 &&
-                                height <= 720 &&
-                                (
-                                    tvStartLevel < 0 ||
-                                    height > Number(hlsInstance.levels[tvStartLevel]?.height || 0)
-                                )
-                            ) {
-                                tvStartLevel = index;
-                            }
-                        });
-
-                        if (tvStartLevel >= 0) {
-                            hlsInstance.startLevel = tvStartLevel;
-                            hlsInstance.nextLevel = tvStartLevel;
-                            hlsInstance.autoLevelCapping = tvStartLevel;
-
-                            setTimeout(() => {
-                                if (
-                                    hlsInstance &&
-                                    currentPlayingUrl === url
-                                ) {
-                                    hlsInstance.autoLevelCapping = -1;
-                                    hlsInstance.nextLevel = -1;
-                                    hlsInstance.loadLevel = -1;
-                                }
-                            }, 10000);
-                        }
-                    }
-
                     if (
                         tv365AdaptiveProfile().lowDevice &&
                         hlsInstance.levels?.length
@@ -2797,49 +2741,6 @@ font-weight:700;
 
                 hlsInstance.on(Hls.Events.ERROR, (event, data) => {
                     const adaptiveDetails = String(data?.details || "").toLowerCase();
-
-                    if (
-                        __tvIsAndroidTv() &&
-                        tv365IsVtv1To9(channel) &&
-                        (
-                            adaptiveDetails.includes("bufferstalled") ||
-                            adaptiveDetails.includes("fragload")
-                        )
-                    ) {
-                        let tvSafeLevel = -1;
-
-                        hlsInstance.levels?.forEach((level, index) => {
-                            const height = Number(level.height || 0);
-
-                            if (
-                                height > 0 &&
-                                height <= 720 &&
-                                (
-                                    tvSafeLevel < 0 ||
-                                    height > Number(hlsInstance.levels[tvSafeLevel]?.height || 0)
-                                )
-                            ) {
-                                tvSafeLevel = index;
-                            }
-                        });
-
-                        if (tvSafeLevel >= 0) {
-                            hlsInstance.autoLevelCapping = tvSafeLevel;
-                            hlsInstance.nextLevel = tvSafeLevel;
-                            hlsInstance.loadLevel = tvSafeLevel;
-
-                            setTimeout(() => {
-                                if (
-                                    hlsInstance &&
-                                    currentPlayingUrl === url
-                                ) {
-                                    hlsInstance.autoLevelCapping = -1;
-                                    hlsInstance.nextLevel = -1;
-                                    hlsInstance.loadLevel = -1;
-                                }
-                            }, 90000);
-                        }
-                    }
 
                     if (
                         tv365AdaptiveProfile().lowDevice &&
@@ -3107,380 +3008,208 @@ document.addEventListener("DOMContentLoaded", function () {
 
 <script>
 function __tvIsAndroidTv() {
-    return window.__TV365_REMOTE_ACTIVE__ === true ||
-        /TV365_ANDROID_TV|TV|AFT|BRAVIA|Android TV|SMART-TV/i.test(navigator.userAgent);
+    return /TV365_ANDROID_TV|TV|AFT|BRAVIA|Android TV|SMART-TV/i.test(navigator.userAgent);
 }
 
 function __tvRequestFullscreen() {
-    if (!__tvIsAndroidTv()) return;
-
+    if (!__tvIsAndroidTv() || document.fullscreenElement) return;
+    const container = document.querySelector('.video-container');
     const search = document.getElementById('search-input');
-
-    if (search) {
-        search.blur();
-        search.readOnly = true;
-        setTimeout(() => { search.readOnly = false; }, 900);
-    }
-
-    document.body.classList.add('tv365-tv-fullscreen');
-    document.body.focus({ preventScroll: true });
+    if (!container) return;
+    try {
+        if (search) {
+            search.blur();
+            search.readOnly = true;
+            setTimeout(() => { search.readOnly = false; }, 900);
+        }
+        document.body.focus({ preventScroll: true });
+        const result = container.requestFullscreen?.();
+        if (result && result.catch) result.catch(() => {});
+    } catch (_) {}
 }
 
-window.TV365_EXIT_INSTANT_FULLSCREEN = function () {
-    const wasFullscreen =
-        document.body.classList.contains('tv365-tv-fullscreen');
+// ================= TV365 DPAD V7 - ONE CONTROLLER =================
+let tv365DpadIndex = 0;
+let tv365DpadMode = "channels";
+let tv365DpadReady = false;
 
-    document.body.classList.remove('tv365-tv-fullscreen');
-
-    if (wasFullscreen) {
-        window.TV365_RESET_TV_FOCUS?.();
-    }
-
-    return wasFullscreen;
-};
-
-// ================= TV365 REMOTE V2 - ANDROID KEY DRIVER =================
-let remoteArea = "tabs"; // search | tabs | list
-let tabIndex = 0;
-let channelIndex = 0;
-let lastChannelByTab = {};
-
-function getTabs() {
-    return [...document.querySelectorAll(".category-tab")];
+function tv365DpadChannels() {
+    return Array.from(document.querySelectorAll(".channel-item"));
 }
 
-function getChannels() {
-    return [...document.querySelectorAll(".channel-item")];
+function tv365DpadTabs() {
+    return Array.from(document.querySelectorAll(".category-tab"));
 }
 
-function clearRemoteFocus() {
+function tv365DpadSearch() {
+    return document.getElementById("search-input");
+}
+
+function tv365DpadClear() {
     document.querySelectorAll(".remote-focus").forEach(el => {
         el.classList.remove("remote-focus");
     });
 }
 
-function leaveSearch() {
-    const search = document.getElementById("search-input");
-    if (!search) return;
-    search.blur();
-    try { window.getSelection()?.removeAllRanges(); } catch (_) {}
+function tv365DpadFocusChannel(index) {
+    const items = tv365DpadChannels();
+    if (!items.length) return;
+
+    tv365DpadMode = "channels";
+    tv365DpadIndex = Math.max(0, Math.min(index, items.length - 1));
+
+    const search = tv365DpadSearch();
+    if (search) search.blur();
+
+    tv365DpadClear();
+
+    const item = items[tv365DpadIndex];
+    item.classList.add("remote-focus");
+    item.scrollIntoView({ behavior: "auto", block: "nearest" });
 }
 
-function updateRemoteFocus() {
-    if (!__tvIsAndroidTv()) return;
-
-    clearRemoteFocus();
-    const search = document.getElementById("search-input");
-
-    if (remoteArea === "search") {
-        if (!search) {
-            remoteArea = "tabs";
-            updateRemoteFocus();
-            return;
-        }
-
-        search.classList.add("remote-focus");
-        search.scrollIntoView({ block: "nearest" });
-        return;
-    }
-
-    leaveSearch();
-
-    if (remoteArea === "tabs") {
-        const tabs = getTabs();
-        if (!tabs.length) return;
-
-        tabIndex = Math.max(0, Math.min(tabIndex, tabs.length - 1));
-        tabs[tabIndex].classList.add("remote-focus");
-        return;
-    }
-
-    const items = getChannels();
-
-    if (!items.length) {
-        remoteArea = "tabs";
-        updateRemoteFocus();
-        return;
-    }
-
-    channelIndex = Math.max(0, Math.min(channelIndex, items.length - 1));
-
-    const target = items[channelIndex];
-    target.classList.add("remote-focus");
-
-    const top = target.offsetTop - 20;
-    const list = target.closest(".channel-list");
-
-    if (list) {
-        const itemTop = target.offsetTop;
-        const itemBottom = itemTop + target.offsetHeight;
-        const viewTop = list.scrollTop;
-        const viewBottom = viewTop + list.clientHeight;
-
-        if (itemTop < viewTop) {
-            list.scrollTop = Math.max(0, itemTop - 12);
-        } else if (itemBottom > viewBottom) {
-            list.scrollTop = itemBottom - list.clientHeight + 12;
-        }
-    }
-}
-
-function enterSearch() {
-    const search = document.getElementById("search-input");
+function tv365DpadFocusSearch(openKeyboard) {
+    const search = tv365DpadSearch();
     if (!search) return;
 
-    remoteArea = "search";
-    clearRemoteFocus();
+    tv365DpadMode = "search";
+    tv365DpadClear();
     search.classList.add("remote-focus");
-    search.readOnly = false;
-    search.focus({ preventScroll: true });
-    search.click();
 
-    const len = search.value.length;
-    try { search.setSelectionRange(len, len); } catch (_) {}
+    if (openKeyboard) {
+        search.readOnly = false;
+        search.focus({ preventScroll: true });
 
-    try {
-        if (window.TV365App && typeof window.TV365App.openKeyboard === "function") {
-            window.TV365App.openKeyboard();
-        }
-    } catch (_) {}
-}
+        const len = search.value.length;
+        try { search.setSelectionRange(len, len); } catch (_) {}
 
-window.TV365_RESET_TV_FOCUS = function () {
-    const search = document.getElementById("search-input");
-
-    if (search) {
-        search.readOnly = true;
+        try { window.TV365App?.openKeyboard?.(); } catch (_) {}
+    } else {
         search.blur();
     }
+}
 
-    remoteArea = "tabs";
-    tabIndex = Math.max(0, Math.min(tabIndex, getTabs().length - 1));
-    updateRemoteFocus();
+function tv365DpadChangeGroup(step) {
+    const tabs = tv365DpadTabs();
+    if (!tabs.length) return;
 
-    setTimeout(() => {
-        if (search) search.readOnly = false;
-    }, 700);
-};
+    let current = tabs.findIndex(tab => tab.classList.contains("active"));
+    if (current < 0) current = 0;
 
-let tv365RemoteModeEnabled = false;
+    const next = Math.max(0, Math.min(current + step, tabs.length - 1));
+    if (next === current) return;
 
-window.TV365_ENABLE_REMOTE_MODE = function () {
+    tabs[next].click();
+
+    requestAnimationFrame(() => {
+        tv365DpadIndex = 0;
+        tv365DpadFocusChannel(0);
+    });
+}
+
+window.TV365_DPAD_INIT = function () {
     window.__TV365_REMOTE_ACTIVE__ = true;
 
-    if (tv365RemoteModeEnabled) return;
-    tv365RemoteModeEnabled = true;
+    if (tv365DpadReady) return true;
+    tv365DpadReady = true;
 
-    const search = document.getElementById("search-input");
-
-    if (search) {
-        search.blur();
-        search.readOnly = true;
-    }
-
-    const items = getChannels();
-
-    if (items.length > 0) {
-        remoteArea = "list";
-        channelIndex = Math.max(0, Math.min(channelIndex, items.length - 1));
-    } else {
-        remoteArea = "tabs";
-    }
-
-    updateRemoteFocusForce();
-
-    setTimeout(function () {
-        if (search) search.readOnly = false;
-    }, 800);
+    requestAnimationFrame(() => tv365DpadFocusChannel(0));
+    return true;
 };
 
-function updateRemoteFocusForce() {
-    clearRemoteFocus();
+window.TV365_DPAD_KEY = function (code) {
+    window.TV365_DPAD_INIT();
 
-    const search = document.getElementById("search-input");
+    const search = tv365DpadSearch();
 
-    if (remoteArea === "search") {
-        if (search) search.classList.add("remote-focus");
-        return;
-    }
-
-    leaveSearch();
-
-    if (remoteArea === "tabs") {
-        const tabs = getTabs();
-        if (!tabs.length) return;
-
-        tabIndex = Math.max(0, Math.min(tabIndex, tabs.length - 1));
-        tabs[tabIndex].classList.add("remote-focus");
-        return;
-    }
-
-    const items = getChannels();
-    if (!items.length) {
-        remoteArea = "tabs";
-        updateRemoteFocusForce();
-        return;
-    }
-
-    channelIndex = Math.max(0, Math.min(channelIndex, items.length - 1));
-    const target = items[channelIndex];
-    target.classList.add("remote-focus");
-    target.scrollIntoView({ behavior: "auto", block: "nearest" });
-}
-
-window.TV365_HANDLE_REMOTE_KEY = function (code) {
-    const search = document.getElementById("search-input");
-    const tabs = getTabs();
-    const items = getChannels();
-
-    // Chỉ cho ô tìm kiếm giữ focus khi TV365 chủ động vào chế độ search.
-    if (document.activeElement === search && remoteArea !== "search") {
-        leaveSearch();
-    }
-
-    // Khi đang gõ tìm kiếm: DOWN thoát tìm kiếm.
-    // LEFT/RIGHT để di chuyển con trỏ chữ; UP giữ tại ô search.
-    if (document.activeElement === search && remoteArea === "search") {
+    if (
+        tv365DpadMode === "search" &&
+        search &&
+        document.activeElement === search
+    ) {
         if (code === 20) {
-            leaveSearch();
-            remoteArea = "tabs";
-            updateRemoteFocusForce();
+            search.blur();
+            tv365DpadFocusChannel(0);
             return true;
         }
 
-        if (code === 19) {
-            return true;
-        }
+        if (code === 19) return true;
 
-        return false;
+        // Khi đang gõ: trái/phải/OK để bàn phím và ô chữ xử lý.
+        if (code === 21 || code === 22 || code === 23 || code === 66) {
+            return false;
+        }
     }
 
-    if (code === 21) { // LEFT
-        if (remoteArea === "tabs") {
-            tabIndex = Math.max(0, tabIndex - 1);
-        } else if (remoteArea === "list") {
-            remoteArea = "tabs";
+    if (code === 19) {
+        if (tv365DpadMode === "channels") {
+            if (tv365DpadIndex === 0) {
+                tv365DpadFocusSearch(false);
+            } else {
+                tv365DpadFocusChannel(tv365DpadIndex - 1);
+            }
         }
-
-        updateRemoteFocusForce();
         return true;
     }
 
-    if (code === 22) { // RIGHT
-        if (remoteArea === "tabs") {
-            tabIndex = Math.min(Math.max(0, tabs.length - 1), tabIndex + 1);
-        } else if (remoteArea === "list") {
-            remoteArea = "tabs";
-        }
-
-        updateRemoteFocusForce();
-        return true;
-    }
-
-    if (code === 20) { // DOWN
-        if (remoteArea === "search") {
-            remoteArea = "tabs";
-        } else if (remoteArea === "tabs") {
-            remoteArea = "list";
-            channelIndex = lastChannelByTab[tabIndex] ?? 0;
+    if (code === 20) {
+        if (tv365DpadMode === "search") {
+            tv365DpadFocusChannel(0);
         } else {
-            channelIndex = Math.min(
-                Math.max(0, items.length - 1),
-                channelIndex + 1
-            );
+            tv365DpadFocusChannel(tv365DpadIndex + 1);
         }
-
-        updateRemoteFocusForce();
         return true;
     }
 
-    if (code === 19) { // UP
-        if (remoteArea === "list") {
-            remoteArea = "search";
-        } else if (remoteArea === "tabs") {
-            remoteArea = "search";
-        }
-
-        updateRemoteFocusForce();
+    if (code === 21) {
+        if (tv365DpadMode === "channels") tv365DpadChangeGroup(-1);
         return true;
     }
 
-    if (code === 23 || code === 66) { // OK / ENTER
-        if (remoteArea === "search") {
-            enterSearch();
+    if (code === 22) {
+        if (tv365DpadMode === "channels") tv365DpadChangeGroup(1);
+        return true;
+    }
+
+    if (code === 23 || code === 66) {
+        if (tv365DpadMode === "search") {
+            tv365DpadFocusSearch(true);
             return true;
         }
 
-        if (remoteArea === "tabs") {
-            const tab = tabs[tabIndex];
-            if (!tab) return true;
-
-            tab.click();
-            channelIndex = lastChannelByTab[tabIndex] ?? 0;
-            remoteArea = "list";
-
-            requestAnimationFrame(updateRemoteFocus);
-            return true;
-        }
-
-        const item = items[channelIndex];
-        if (!item) return true;
-
-        lastChannelByTab[tabIndex] = channelIndex;
-        leaveSearch();
-
-        if (search) {
-            search.readOnly = true;
-            setTimeout(() => { search.readOnly = false; }, 1000);
-        }
-
-        enterTvFullscreenNow();
-        item.click();
+        const item = tv365DpadChannels()[tv365DpadIndex];
+        if (item) item.click();
         return true;
     }
 
     return false;
 };
 
-window.addEventListener("load", function () {
-    setTimeout(function () {
-        if (__tvIsAndroidTv()) {
-            const search = document.getElementById("search-input");
-            if (search) {
-                search.blur();
-                search.readOnly = true;
-            }
+window.TV365_RESET_TV_FOCUS = function () {
+    const search = tv365DpadSearch();
+    if (search) search.blur();
 
-            remoteArea = "tabs";
-            updateRemoteFocus();
+    tv365DpadMode = "channels";
+    requestAnimationFrame(() => tv365DpadFocusChannel(tv365DpadIndex));
+};
 
-            setTimeout(function () {
-                if (search) search.readOnly = false;
-            }, 800);
-        }
-    }, 250);
-});
-
-const __render = window.renderChannelsExplicit;
-if (typeof __render === "function") {
+const __tv365RenderV7 = window.renderChannelsExplicit;
+if (typeof __tv365RenderV7 === "function") {
     window.renderChannelsExplicit = function (channels) {
-        __render(channels);
+        __tv365RenderV7(channels);
 
-        if (__tvIsAndroidTv()) {
-            requestAnimationFrame(function () {
-                if (
-                    remoteArea === "list" &&
-                    channelIndex >= getChannels().length
-                ) {
-                    channelIndex = Math.max(0, getChannels().length - 1);
+        if (tv365DpadReady) {
+            requestAnimationFrame(() => {
+                const items = tv365DpadChannels();
+                if (items.length) {
+                    tv365DpadIndex = Math.min(tv365DpadIndex, items.length - 1);
+                    tv365DpadFocusChannel(tv365DpadIndex);
                 }
-
-                updateRemoteFocus();
             });
         }
     };
 }
-// ================= END TV365 REMOTE =================
+// ================= END TV365 DPAD V7 =================
 </script>
 
 </body>
