@@ -2173,6 +2173,14 @@ font-weight:700;
             return { lowDevice };
         }
 
+        function tv365IsTvVtv(channel) {
+            const name = String(channel?.name || "")
+                .replace(/\s+/g, "")
+                .toUpperCase();
+
+            return __tvIsAndroidTv() && /^VTV[1-9](HD)?$/.test(name);
+        }
+
         async function playChannel(channel) {
             enterTvFullscreenNow();
 
@@ -2582,20 +2590,20 @@ font-weight:700;
                     enableWorker: true,
                     lowLatencyMode: false,
 
-                    startLevel: -1,
-                    testBandwidth: true,
+                    startLevel: tv365IsTvVtv(channel) ? 0 : -1,
+                    testBandwidth: tv365IsTvVtv(channel) ? false : true,
                     capLevelToPlayerSize: true,
 
                     backBufferLength: 30,
-                    maxBufferLength: 24,
-                    maxMaxBufferLength: 45,
+                    maxBufferLength: tv365IsTvVtv(channel) ? 50 : 24,
+                    maxMaxBufferLength: tv365IsTvVtv(channel) ? 80 : 45,
                     maxBufferSize: 60 * 1000 * 1000,
 
-                    liveSyncDurationCount: 4,
-                    liveMaxLatencyDurationCount: 10,
+                    liveSyncDurationCount: tv365IsTvVtv(channel) ? 6 : 4,
+                    liveMaxLatencyDurationCount: tv365IsTvVtv(channel) ? 14 : 10,
 
-                    maxBufferHole: 0.5,
-                    highBufferWatchdogPeriod: 3,
+                    maxBufferHole: tv365IsTvVtv(channel) ? 1.5 : 0.5,
+                    highBufferWatchdogPeriod: tv365IsTvVtv(channel) ? 10 : 3,
 
                     manifestLoadingMaxRetry: 4,
                     manifestLoadingRetryDelay: 500,
@@ -2634,10 +2642,10 @@ font-weight:700;
 
                 hlsInstance.on(Hls.Events.MANIFEST_PARSED, () => {
                     if (
-                        __tvIsAndroidTv() &&
+                        tv365IsTvVtv(channel) &&
                         hlsInstance.levels?.length
                     ) {
-                        let tvBest720 = -1;
+                        let tvStableLevel = -1;
 
                         hlsInstance.levels.forEach((level, index) => {
                             const height = Number(level.height || 0);
@@ -2646,26 +2654,25 @@ font-weight:700;
                                 height > 0 &&
                                 height <= 720 &&
                                 (
-                                    tvBest720 < 0 ||
-                                    height > Number(hlsInstance.levels[tvBest720]?.height || 0)
+                                    tvStableLevel < 0 ||
+                                    height > Number(
+                                        hlsInstance.levels[tvStableLevel]?.height || 0
+                                    )
                                 )
                             ) {
-                                tvBest720 = index;
+                                tvStableLevel = index;
                             }
                         });
 
-                        if (tvBest720 >= 0) {
-                            hlsInstance.autoLevelCapping = tvBest720;
-                            hlsInstance.nextLevel = tvBest720;
-
-                            setTimeout(() => {
-                                if (hlsInstance && currentPlayingUrl === url) {
-                                    hlsInstance.autoLevelCapping = -1;
-                                    hlsInstance.nextLevel = -1;
-                                    hlsInstance.loadLevel = -1;
-                                }
-                            }, 10000);
+                        if (tvStableLevel < 0) {
+                            tvStableLevel = 0;
                         }
+
+                        hlsInstance.startLevel = tvStableLevel;
+                        hlsInstance.currentLevel = tvStableLevel;
+                        hlsInstance.nextLevel = tvStableLevel;
+                        hlsInstance.loadLevel = tvStableLevel;
+                        hlsInstance.autoLevelCapping = tvStableLevel;
                     }
 
                     if (
@@ -3072,13 +3079,54 @@ function __tvIsAndroidTv() {
         /TV365_ANDROID_TV|TV|AFT|BRAVIA|Android TV|SMART-TV/i.test(navigator.userAgent);
 }
 
+let tv365TvPlayerPlaceholder = null;
+
 function __tvRequestFullscreen() {
     if (!__tvIsAndroidTv()) return;
 
     const search = document.getElementById('search-input');
+    const container = document.querySelector('.video-container');
 
     try {
         if (search) search.blur();
+        if (!container) return;
+
+        if (!document.body.classList.contains('tv365-tv-fullscreen')) {
+            tv365TvPlayerPlaceholder =
+                document.createComment('TV365_PLAYER_POSITION');
+
+            container.parentNode.insertBefore(
+                tv365TvPlayerPlaceholder,
+                container
+            );
+
+            document.body.appendChild(container);
+        }
+
+        container.style.setProperty('position', 'fixed', 'important');
+        container.style.setProperty('inset', '0', 'important');
+        container.style.setProperty('left', '0', 'important');
+        container.style.setProperty('top', '0', 'important');
+        container.style.setProperty('width', '100vw', 'important');
+        container.style.setProperty('height', '100vh', 'important');
+        container.style.setProperty('min-width', '100vw', 'important');
+        container.style.setProperty('min-height', '100vh', 'important');
+        container.style.setProperty('max-width', 'none', 'important');
+        container.style.setProperty('max-height', 'none', 'important');
+        container.style.setProperty('margin', '0', 'important');
+        container.style.setProperty('padding', '0', 'important');
+        container.style.setProperty('transform', 'none', 'important');
+        container.style.setProperty('z-index', '2147483647', 'important');
+        container.style.setProperty('background', '#000', 'important');
+
+        videoPlayer.style.setProperty('position', 'absolute', 'important');
+        videoPlayer.style.setProperty('inset', '0', 'important');
+        videoPlayer.style.setProperty('width', '100%', 'important');
+        videoPlayer.style.setProperty('height', '100%', 'important');
+        videoPlayer.style.setProperty('max-width', 'none', 'important');
+        videoPlayer.style.setProperty('max-height', 'none', 'important');
+        videoPlayer.style.setProperty('margin', '0', 'important');
+        videoPlayer.style.setProperty('object-fit', 'contain', 'important');
 
         document.body.classList.add('tv365-tv-fullscreen');
         document.body.focus({ preventScroll: true });
@@ -3089,12 +3137,40 @@ window.TV365_EXIT_TV_FULLSCREEN = function () {
     const active =
         document.body.classList.contains('tv365-tv-fullscreen');
 
-    if (active) {
-        document.body.classList.remove('tv365-tv-fullscreen');
-        window.TV365_RESET_TV_FOCUS?.();
-    }
+    if (!active) return false;
 
-    return active;
+    const container = document.querySelector('.video-container');
+
+    document.body.classList.remove('tv365-tv-fullscreen');
+
+    try {
+        if (
+            container &&
+            tv365TvPlayerPlaceholder &&
+            tv365TvPlayerPlaceholder.parentNode
+        ) {
+            tv365TvPlayerPlaceholder.parentNode.replaceChild(
+                container,
+                tv365TvPlayerPlaceholder
+            );
+        }
+
+        tv365TvPlayerPlaceholder = null;
+
+        [
+            'position', 'inset', 'left', 'top', 'width', 'height',
+            'min-width', 'min-height', 'max-width', 'max-height',
+            'margin', 'padding', 'transform', 'z-index', 'background'
+        ].forEach(name => container?.style.removeProperty(name));
+
+        [
+            'position', 'inset', 'width', 'height',
+            'max-width', 'max-height', 'margin', 'object-fit'
+        ].forEach(name => videoPlayer.style.removeProperty(name));
+    } catch (_) {}
+
+    window.TV365_RESET_TV_FOCUS?.();
+    return true;
 };
 
 // ================= TV365 DPAD V8 - FAST CONTROLLER =================
