@@ -2687,23 +2687,7 @@ font-weight:700;
 
 
             }
-            // --- Case 2A: Android TV ưu tiên media pipeline native ---
-            else if (
-                tv365IsTvRuntime() &&
-                tv365IsHlsUrl(resolvedUrl) &&
-                !isMPD &&
-                !tv365ForceHlsJsUrls.has(url)
-            ) {
-                const nativeStarted =
-                    tv365TryNativeTvHls(channel, resolvedUrl, url);
-
-                if (!nativeStarted) {
-                    tv365ForceHlsJsUrls.add(url);
-                    playChannel(channel);
-                    return;
-                }
-            }
-            // --- Case 2B: HLS.js fallback ---
+            // --- Case 2: HLS / M3U8 - giữ player gốc ổn định cho điện thoại, PC và TV ---
             else if (typeof Hls !== 'undefined' && Hls.isSupported() && !isMPD) {
                 hlsInstance = new Hls({
                     enableWorker: true,
