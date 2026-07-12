@@ -465,6 +465,38 @@ font-weight:700;
             box-shadow: 0 0 18px rgba(249,115,22,.75) !important;
         }
 
+
+        body.tv365-tv-fullscreen {
+            overflow: hidden !important;
+        }
+
+        body.tv365-tv-fullscreen .video-container {
+            position: fixed !important;
+            inset: 0 !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            min-width: 100vw !important;
+            min-height: 100vh !important;
+            max-width: none !important;
+            max-height: none !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            transform: none !important;
+            z-index: 2147483646 !important;
+            background: #000 !important;
+        }
+
+        body.tv365-tv-fullscreen .video-container video {
+            position: absolute !important;
+            inset: 0 !important;
+            width: 100% !important;
+            height: 100% !important;
+            max-width: none !important;
+            max-height: none !important;
+            margin: 0 !important;
+            object-fit: contain !important;
+        }
+
 </style>
 </head>
 
@@ -2576,14 +2608,18 @@ font-weight:700;
 
                     abrEwmaFastLive: 3,
                     abrEwmaSlowLive: 6,
-                    abrBandWidthFactor: tv365AdaptiveProfile().lowDevice ? 0.70 : 0.90,
-                    abrBandWidthUpFactor: tv365AdaptiveProfile().lowDevice ? 0.55 : 0.80,
-                    abrEwmaDefaultEstimate: tv365AdaptiveProfile().lowDevice
-                        ? 1800000
-                        : 8000000,
-                    abrEwmaDefaultEstimateMax: tv365AdaptiveProfile().lowDevice
-                        ? 8000000
-                        : 20000000,
+                    abrBandWidthFactor: __tvIsAndroidTv()
+                        ? 0.70
+                        : (tv365AdaptiveProfile().lowDevice ? 0.70 : 0.90),
+                    abrBandWidthUpFactor: __tvIsAndroidTv()
+                        ? 0.55
+                        : (tv365AdaptiveProfile().lowDevice ? 0.55 : 0.80),
+                    abrEwmaDefaultEstimate: __tvIsAndroidTv()
+                        ? 2200000
+                        : (tv365AdaptiveProfile().lowDevice ? 1800000 : 8000000),
+                    abrEwmaDefaultEstimateMax: __tvIsAndroidTv()
+                        ? 10000000
+                        : (tv365AdaptiveProfile().lowDevice ? 8000000 : 20000000),
 
                     stretchShortVideoTrack: false,
                     forceKeyFrameOnDiscontinuity: false,
@@ -2597,6 +2633,41 @@ font-weight:700;
                 hlsInstance.attachMedia(videoPlayer);
 
                 hlsInstance.on(Hls.Events.MANIFEST_PARSED, () => {
+                    if (
+                        __tvIsAndroidTv() &&
+                        hlsInstance.levels?.length
+                    ) {
+                        let tvBest720 = -1;
+
+                        hlsInstance.levels.forEach((level, index) => {
+                            const height = Number(level.height || 0);
+
+                            if (
+                                height > 0 &&
+                                height <= 720 &&
+                                (
+                                    tvBest720 < 0 ||
+                                    height > Number(hlsInstance.levels[tvBest720]?.height || 0)
+                                )
+                            ) {
+                                tvBest720 = index;
+                            }
+                        });
+
+                        if (tvBest720 >= 0) {
+                            hlsInstance.autoLevelCapping = tvBest720;
+                            hlsInstance.nextLevel = tvBest720;
+
+                            setTimeout(() => {
+                                if (hlsInstance && currentPlayingUrl === url) {
+                                    hlsInstance.autoLevelCapping = -1;
+                                    hlsInstance.nextLevel = -1;
+                                    hlsInstance.loadLevel = -1;
+                                }
+                            }, 10000);
+                        }
+                    }
+
                     if (
                         tv365AdaptiveProfile().lowDevice &&
                         hlsInstance.levels?.length
@@ -2997,25 +3068,34 @@ document.addEventListener("DOMContentLoaded", function () {
 
 <script>
 function __tvIsAndroidTv() {
-    return /TV365_ANDROID_TV|TV|AFT|BRAVIA|Android TV|SMART-TV/i.test(navigator.userAgent);
+    return window.__TV365_REMOTE_ACTIVE__ === true ||
+        /TV365_ANDROID_TV|TV|AFT|BRAVIA|Android TV|SMART-TV/i.test(navigator.userAgent);
 }
 
 function __tvRequestFullscreen() {
-    if (!__tvIsAndroidTv() || document.fullscreenElement) return;
-    const container = document.querySelector('.video-container');
+    if (!__tvIsAndroidTv()) return;
+
     const search = document.getElementById('search-input');
-    if (!container) return;
+
     try {
-        if (search) {
-            search.blur();
-            search.readOnly = true;
-            setTimeout(() => { search.readOnly = false; }, 900);
-        }
+        if (search) search.blur();
+
+        document.body.classList.add('tv365-tv-fullscreen');
         document.body.focus({ preventScroll: true });
-        const result = container.requestFullscreen?.();
-        if (result && result.catch) result.catch(() => {});
     } catch (_) {}
 }
+
+window.TV365_EXIT_TV_FULLSCREEN = function () {
+    const active =
+        document.body.classList.contains('tv365-tv-fullscreen');
+
+    if (active) {
+        document.body.classList.remove('tv365-tv-fullscreen');
+        window.TV365_RESET_TV_FOCUS?.();
+    }
+
+    return active;
+};
 
 // ================= TV365 DPAD V8 - FAST CONTROLLER =================
 let tv365DpadIndex = 0;
@@ -3109,7 +3189,12 @@ function tv365DpadChangeGroup(step) {
         return;
     }
 
-    currentCategory = tabs[next].innerText.trim();
+    const groups = [
+        'Tất cả',
+        ...new Set(allChannels.map(c => c.group || 'Khác'))
+    ];
+
+    currentCategory = groups[next] || 'Tất cả';
 
     tabs.forEach((tab, index) => {
         tab.classList.toggle("active", index === next);
