@@ -2297,6 +2297,16 @@ font-weight:700;
             return __tvIsAndroidTv() && /^VTV[1-9](HD)?$/.test(name);
         }
 
+        function tv365IsWeakHdTv() {
+            if (!__tvIsAndroidTv()) return false;
+            const shortSide = Math.min(
+                Number(screen.width || 0),
+                Number(screen.height || 0)
+            );
+            // TV HD/HD Ready như Xiaomi L32. TV Full HD/4K mạnh không bị áp dụng.
+            return shortSide > 0 && shortSide <= 768;
+        }
+
         function tv365IsTvSctv(channel) {
             const name = String(channel?.name || "").replace(/\s+/g, "").toUpperCase();
             const group = String(channel?.group || "").toUpperCase();
@@ -2759,9 +2769,12 @@ font-weight:700;
             }
             // --- Case 2: HLS / M3U8 (Using Hls.js) ---
             else if (typeof Hls !== 'undefined' && Hls.isSupported() && !isMPD) {
+                const tv365WeakVtvFastMode = tv365IsTvVtv(channel) && tv365IsWeakHdTv();
+
                 hlsInstance = new Hls({
                     enableWorker: true,
                     lowLatencyMode: false,
+                    autoStartLoad: !tv365WeakVtvFastMode,
 
                     startLevel: -1,
                     testBandwidth: true,
@@ -2843,15 +2856,41 @@ font-weight:700;
                         // Sau 30 giây vẫn giữ ABR AUTO: mạng ổn Hls.js tự nâng lên level cao nhất,
                         // mạng yếu/buffer tăng thì tự hạ xuống level phù hợp.
                         const tv365FastVtvStart = tv365IsTvVtv(channel);
+                        const tv365WeakVtvTv = tv365FastVtvStart && tv365IsWeakHdTv();
 
-                        // Xiaomi/Android TV + VTV: để Hls.js AUTO ngay từ đầu.
-                        // Không ép level 0 rồi đổi sang AUTO khi đang phát vì một số Xiaomi TV
-                        // có thể kẹt decoder khi đổi rendition sau khoảng 1 phút.
-                        hlsInstance.startLevel = -1;
-                        hlsInstance.currentLevel = -1;
-                        hlsInstance.nextLevel = -1;
-                        hlsInstance.loadLevel = -1;
-                        hlsInstance.autoLevelCapping = highestLevel;
+                        // Xiaomi L32/TV HD yếu + VTV:
+                        // chọn thẳng rendition 720p ổn định rồi mới bắt đầu tải fragment.
+                        // Không test băng thông/không nhảy 0 -> AUTO -> 1080p, giúp vào kênh nhanh
+                        // và tránh decoder treo sau khoảng 1 phút.
+                        if (tv365WeakVtvTv) {
+                            let best720 = -1;
+                            hlsInstance.levels.forEach((level, index) => {
+                                const h = Number(level.height || 0);
+                                if (h > 0 && h <= 720) {
+                                    if (
+                                        best720 < 0 ||
+                                        h > Number(hlsInstance.levels[best720]?.height || 0) ||
+                                        (
+                                            h === Number(hlsInstance.levels[best720]?.height || 0) &&
+                                            Number(level.bitrate || 0) > Number(hlsInstance.levels[best720]?.bitrate || 0)
+                                        )
+                                    ) best720 = index;
+                                }
+                            });
+
+                            const stableLevel = best720 >= 0 ? best720 : 0;
+                            hlsInstance.currentLevel = stableLevel;
+                            hlsInstance.nextLevel = stableLevel;
+                            hlsInstance.loadLevel = stableLevel;
+                            hlsInstance.autoLevelCapping = stableLevel;
+                            hlsInstance.startLoad(-1);
+                        } else {
+                            hlsInstance.startLevel = -1;
+                            hlsInstance.currentLevel = -1;
+                            hlsInstance.nextLevel = -1;
+                            hlsInstance.loadLevel = -1;
+                            hlsInstance.autoLevelCapping = highestLevel;
+                        }
 
                         if (window.tv365AdaptiveTimer) {
                             clearTimeout(window.tv365AdaptiveTimer);
