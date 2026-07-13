@@ -1437,6 +1437,11 @@ font-weight:700;
 
             channelListEl.appendChild(fragment);
             lucide.createIcons({ root: channelListEl });
+
+            // TV: remote sẵn sàng ngay khi item đầu tiên vừa render.
+            if (__tvIsAndroidTv() && !tv365DpadReady) {
+                requestAnimationFrame(() => window.TV365_DPAD_INIT?.());
+            }
         }
 
         // Render Category Tabs
@@ -1576,6 +1581,13 @@ font-weight:700;
                 console.error("Lỗi get link cuối cùng:", lastError);
                 return showToast('Website gốc đang chặn quyền truy cập (CORS) hoặc bị lỗi kĩ thuật.', 'error');
             }
+
+            // TV365 V6: lưu playlist gần nhất để Android TV mở app có danh sách ngay.
+            try {
+                if (urlInput.includes('TV365-DATA') && text) {
+                    localStorage.setItem('tv365_playlist_cache_v1', text);
+                }
+            } catch (_) {}
 
             try { processData(parseJSON(JSON.parse(text))); }
             catch (e) { processData(parseM3U(text)); }
@@ -1738,6 +1750,16 @@ font-weight:700;
                 try {
                     if (hlsInstance && videoPlayer.readyState < 2) {
                         hlsInstance.startLoad(-1);
+                    }
+
+                    // SCTV DASH/DRM dùng Shaka: nếu tụt buffer thì kéo nhẹ về live edge
+                    // và gọi play lại, không bắt người dùng bấm OK.
+                    if (shakaInstance && shakaInstance.isLive && shakaInstance.isLive()) {
+                        const range = shakaInstance.seekRange();
+                        const drift = range.end - videoPlayer.currentTime;
+                        if (drift > 10 || videoPlayer.readyState < 2) {
+                            videoPlayer.currentTime = Math.max(range.start, range.end - 3);
+                        }
                     }
                 } catch (_) {}
 
@@ -2218,6 +2240,12 @@ font-weight:700;
             return __tvIsAndroidTv() && /^VTV[1-9](HD)?$/.test(name);
         }
 
+        function tv365IsTvSctv(channel) {
+            const name = String(channel?.name || "").replace(/\s+/g, "").toUpperCase();
+            const group = String(channel?.group || "").toUpperCase();
+            return __tvIsAndroidTv() && (group === "SCTV" || name.includes("SCTV"));
+        }
+
         async function playChannel(channel) {
             enterTvFullscreenNow();
 
@@ -2240,6 +2268,36 @@ font-weight:700;
 
             const url = channel.url;
             currentPlayingUrl = url;
+            const tv365SctvTvMode = tv365IsTvSctv(channel);
+
+            if (window.tv365SctvWatchdog) {
+                clearInterval(window.tv365SctvWatchdog);
+                window.tv365SctvWatchdog = null;
+            }
+
+            if (tv365SctvTvMode) {
+                window.tv365SctvWatchdog = setInterval(() => {
+                    if (!currentPlayingUrl || currentPlayingUrl !== url || videoPlayer.ended) return;
+
+                    if (videoPlayer.paused || videoPlayer.readyState < 2) {
+                        tv365RecoverTvPlayback();
+                        return;
+                    }
+
+                    try {
+                        if (shakaInstance && shakaInstance.isLive && shakaInstance.isLive()) {
+                            const range = shakaInstance.seekRange();
+                            const drift = range.end - videoPlayer.currentTime;
+                            if (drift > 12) videoPlayer.currentTime = Math.max(range.start, range.end - 3);
+                        } else if (hlsInstance && videoPlayer.buffered.length) {
+                            const edge = videoPlayer.buffered.end(videoPlayer.buffered.length - 1);
+                            if (edge - videoPlayer.currentTime > 12) {
+                                videoPlayer.currentTime = Math.max(0, edge - 3);
+                            }
+                        }
+                    } catch (_) {}
+                }, 2000);
+            }
 
             // UI Update
             playerOverlay.style.opacity = '0';
@@ -2265,6 +2323,7 @@ font-weight:700;
             if (window.tv365AdaptiveTimer) { clearTimeout(window.tv365AdaptiveTimer); window.tv365AdaptiveTimer = null; }
             if (tv365ResumeTimer) { clearTimeout(tv365ResumeTimer); tv365ResumeTimer = null; }
             if (tv365TvRecoverTimer) { clearTimeout(tv365TvRecoverTimer); tv365TvRecoverTimer = null; }
+            if (window.tv365SctvWatchdog) { clearInterval(window.tv365SctvWatchdog); window.tv365SctvWatchdog = null; }
             if (hlsInstance) { hlsInstance.destroy(); hlsInstance = null; }
             if (shakaInstance) {
                 await shakaInstance.destroy();
@@ -2456,6 +2515,31 @@ font-weight:700;
             if (typeof shaka !== 'undefined' && isMPD && shaka.Player.isBrowserSupported()) {
                 shakaInstance = new shaka.Player(videoPlayer);
 
+                // Xiaomi/Android TV: giữ buffer DASH/DRM ổn định hơn cho nhóm SCTV.
+                if (__tvIsAndroidTv()) {
+                    shakaInstance.configure({
+                        streaming: {
+                            bufferingGoal: 18,
+                            rebufferingGoal: 3,
+                            bufferBehind: 12,
+                            retryParameters: {
+                                maxAttempts: 6,
+                                baseDelay: 400,
+                                backoffFactor: 1.5,
+                                fuzzFactor: 0.2,
+                                timeout: 12000
+                            }
+                        },
+                        abr: {
+                            enabled: true,
+                            defaultBandwidthEstimate: 2200000,
+                            switchInterval: 8,
+                            bandwidthDowngradeTarget: 0.85,
+                            bandwidthUpgradeTarget: 0.65
+                        }
+                    });
+                }
+
                 // Handle DRM
                 const drmType = channel.props && channel.props['inputstream.adaptive.license_type'];
                 const licenseKey = channel.props && channel.props['inputstream.adaptive.license_key'];
@@ -2565,7 +2649,18 @@ font-weight:700;
 
                 try {
                     await shakaInstance.load(resolvedUrl);
-                    videoPlayer.play();
+                    videoPlayer.play().catch(() => {});
+
+                    // Shaka/SCTV watchdog: TV bị pause hoặc buffer thì tự phục hồi.
+                    if (__tvIsAndroidTv()) {
+                        shakaInstance.addEventListener('buffering', (event) => {
+                            if (!event.buffering || !currentPlayingUrl) return;
+                            setTimeout(() => {
+                                if (!shakaInstance || !currentPlayingUrl) return;
+                                tv365RecoverTvPlayback();
+                            }, 700);
+                        });
+                    }
 
                     // Live stream handling
                     if (shakaInstance.isLive()) {
@@ -2714,11 +2809,24 @@ font-weight:700;
                         // Mở kênh bằng AUTO để có hình nhanh, không ép 1080p ngay khi vừa phát.
                         // Sau 30 giây vẫn giữ ABR AUTO: mạng ổn Hls.js tự nâng lên level cao nhất,
                         // mạng yếu/buffer tăng thì tự hạ xuống level phù hợp.
-                        hlsInstance.startLevel = -1;
+                        const tv365FastVtvStart = tv365IsTvVtv(channel);
+
+                        // Xiaomi/Android TV + VTV: lấy level thấp nhất trước để có hình nhanh.
+                        // Khi video đã phát, trả ngay về AUTO để tự nâng/hạ theo mạng.
+                        hlsInstance.startLevel = tv365FastVtvStart ? 0 : -1;
                         hlsInstance.currentLevel = -1;
                         hlsInstance.nextLevel = -1;
                         hlsInstance.loadLevel = -1;
                         hlsInstance.autoLevelCapping = highestLevel;
+
+                        if (tv365FastVtvStart) {
+                            videoPlayer.addEventListener('playing', () => {
+                                if (!hlsInstance || currentPlayingUrl !== url) return;
+                                hlsInstance.currentLevel = -1;
+                                hlsInstance.nextLevel = -1;
+                                hlsInstance.loadLevel = -1;
+                            }, { once: true });
+                        }
 
                         if (window.tv365AdaptiveTimer) {
                             clearTimeout(window.tv365AdaptiveTimer);
@@ -3125,7 +3233,8 @@ font-weight:700;
 
         // Chỉ tải EPG mặc định, không tự động tải danh sách kênh
         window.addEventListener('DOMContentLoaded', () => {
-    setTimeout(() => fetchEPG(), 100);
+    // TV: ưu tiên tải danh sách + remote trước. EPG tải nền sau.
+    setTimeout(() => fetchEPG(), __tvIsAndroidTv() ? 5000 : 800);
 });
 
 let tv365StartupLoading = false;
@@ -3137,6 +3246,20 @@ async function startTV365() {
 
     const PLAYLIST =
         "https://raw.githubusercontent.com/TV365-VN/TV365-DATA/refs/heads/main/error.m3u";
+
+    // Android TV: dựng ngay playlist cache trước khi chờ mạng GitHub.
+    if (__tvIsAndroidTv()) {
+        try {
+            const cached = localStorage.getItem('tv365_playlist_cache_v1');
+            if (cached && cached.includes('EXTINF')) {
+                processData(parseM3U(cached));
+                requestAnimationFrame(() => {
+                    window.TV365_DPAD_INIT?.();
+                    window.TV365_RESET_TV_FOCUS?.();
+                });
+            }
+        } catch (_) {}
+    }
 
     const btn = document.querySelector('button[onclick="openAddDialog()"]');
     if (btn) btn.style.display = "none";
