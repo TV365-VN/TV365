@@ -238,10 +238,6 @@ transform:scale(1.05);
             object-fit: contain;
         }
 
-        button[onclick="openAddDialog()"] {
-            display: none !important;
-        }
-
         .category-tab {
             transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
             white-space: nowrap;
@@ -501,6 +497,61 @@ font-weight:700;
             object-fit: contain !important;
         }
 
+
+        /* V7.12: Premium titan nhẹ - chỉ giao diện */
+        .tv365-premium-badge {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 108px;
+            height: 44px;
+            padding: 0 16px;
+            border-radius: 13px;
+            overflow: hidden;
+            flex-shrink: 0;
+            background: #091126;
+            color: #ffd86b;
+            font-size: 19px;
+            font-weight: 800;
+            letter-spacing: .4px;
+            box-shadow: 0 0 8px rgba(255, 207, 72, .32);
+        }
+
+        .tv365-premium-badge::before {
+            content: "";
+            position: absolute;
+            width: 160%;
+            height: 360%;
+            background: conic-gradient(
+                transparent 0deg 205deg,
+                #67dfff 225deg,
+                #ffffff 250deg,
+                #ffd34e 275deg,
+                transparent 300deg 360deg
+            );
+            animation: tv365TitanRun 2.8s linear infinite;
+            will-change: transform;
+        }
+
+        .tv365-premium-badge::after {
+            content: "";
+            position: absolute;
+            inset: 2px;
+            border-radius: 11px;
+            background: #091126;
+        }
+
+        .tv365-premium-badge span {
+            position: relative;
+            z-index: 1;
+            text-shadow: 0 0 7px rgba(255, 210, 80, .75);
+        }
+
+        @keyframes tv365TitanRun {
+            to { transform: rotate(360deg); }
+        }
+
 </style>
 </head>
 
@@ -532,11 +583,9 @@ font-weight:700;
 </span>
                         </div>
                     </div>
-                    <button onclick="openAddDialog()"
-                        class="w-8 h-8 flex items-center justify-center rounded-xl bg-white/5 hover:bg-orange-500 hover:text-white border border-white/5 text-orange-300 transition-all active:scale-95"
-                        title="Thêm nguồn m3u8">
-                        <i data-lucide="plus" class="w-4 h-4"></i>
-                    </button>
+                    <div class="tv365-premium-badge" aria-label="Premium">
+                        <span>Premium</span>
+                    </div>
                 </div>
 
                 <div class="relative group flex items-center">
@@ -3327,9 +3376,6 @@ async function startTV365(forceRefresh = false) {
         "https://raw.githubusercontent.com/TV365-VN/TV365-DATA/refs/heads/main/error.m3u";
 
     // TV365 chỉ dùng nguồn cố định: ẩn nút + ngay từ đầu, kể cả khi boot bằng cache.
-    const btn = document.querySelector('button[onclick="openAddDialog()"]');
-    if (btn) btn.style.display = "none";
-
     // V7.8 Android TV: cache trước, remote trước, tải mới sau.
     // Không để playlist/EPG/update danh sách tranh tài nguyên 5-7 giây đầu.
     let tv365BootedFromCache = false;
