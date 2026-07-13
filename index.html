@@ -3303,26 +3303,64 @@ font-weight:700;
 
 let tv365StartupLoading = false;
 
-async function startTV365() {
-    if (tv365StartupLoading || allChannels.length > 0) return;
+async function startTV365(forceRefresh = false) {
+    if (tv365StartupLoading || (!forceRefresh && allChannels.length > 0)) return;
 
     tv365StartupLoading = true;
 
     const PLAYLIST =
         "https://raw.githubusercontent.com/TV365-VN/TV365-DATA/refs/heads/main/error.m3u";
 
-    // Android TV: dựng ngay playlist cache trước khi chờ mạng GitHub.
+    // V7.8 Android TV: cache trước, remote trước, tải mới sau.
+    // Không để playlist/EPG/update danh sách tranh tài nguyên 5-7 giây đầu.
+    let tv365BootedFromCache = false;
+
     if (__tvIsAndroidTv()) {
         try {
             const cached = localStorage.getItem('tv365_playlist_cache_v1');
             if (cached && cached.includes('EXTINF')) {
                 processData(parseM3U(cached));
+                tv365BootedFromCache = allChannels.length > 0;
+
                 requestAnimationFrame(() => {
                     window.TV365_DPAD_INIT?.();
                     window.TV365_RESET_TV_FOCUS?.();
                 });
             }
         } catch (_) {}
+
+        if (tv365BootedFromCache) {
+            tv365StartupLoading = false;
+
+            // V7.9 TV CACHE-SWAP:
+            // Tải M3U mới ở nền nhưng CHỈ lưu cache.
+            // Không parse, không processData, không filterChannels, không render lại,
+            // không đụng player/kênh đang xem. Lần mở app sau mới dùng cache mới.
+            setTimeout(async () => {
+                try {
+                    const response = await fetch(PLAYLIST, {
+                        cache: 'no-store'
+                    });
+
+                    if (!response.ok) return;
+
+                    const freshM3u = await response.text();
+
+                    if (
+                        freshM3u &&
+                        freshM3u.includes('#EXTM3U') &&
+                        freshM3u.includes('EXTINF')
+                    ) {
+                        localStorage.setItem(
+                            'tv365_playlist_cache_v1',
+                            freshM3u
+                        );
+                    }
+                } catch (_) {}
+            }, 1000);
+
+            return;
+        }
     }
 
     const btn = document.querySelector('button[onclick="openAddDialog()"]');
