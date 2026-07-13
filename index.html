@@ -2232,6 +2232,7 @@ font-weight:700;
             if (bufferCleanupInterval) { clearInterval(bufferCleanupInterval); bufferCleanupInterval = null; }
             if (window.audioCheckInterval) { clearInterval(window.audioCheckInterval); window.audioCheckInterval = null; }
             if (window._audioDriftInterval) { clearInterval(window._audioDriftInterval); window._audioDriftInterval = null; }
+            if (window.tv365AdaptiveTimer) { clearTimeout(window.tv365AdaptiveTimer); window.tv365AdaptiveTimer = null; }
             if (hlsInstance) { hlsInstance.destroy(); hlsInstance = null; }
             if (shakaInstance) {
                 await shakaInstance.destroy();
@@ -2674,27 +2675,35 @@ font-weight:700;
                             }
                         });
 
-                        // Khởi động nhanh: cho HLS tải level phù hợp trước để có hình sớm.
-                        // Ngay khi video phát được, chuyển lên chất lượng cao nhất.
+                        // TV365 TV Adaptive V2:
+                        // Mở kênh bằng AUTO để có hình nhanh, không ép 1080p ngay khi vừa phát.
+                        // Sau 30 giây vẫn giữ ABR AUTO: mạng ổn Hls.js tự nâng lên level cao nhất,
+                        // mạng yếu/buffer tăng thì tự hạ xuống level phù hợp.
                         hlsInstance.startLevel = -1;
                         hlsInstance.currentLevel = -1;
                         hlsInstance.nextLevel = -1;
                         hlsInstance.loadLevel = -1;
                         hlsInstance.autoLevelCapping = highestLevel;
 
-                        const tv365GoHighest = () => {
-                            if (!hlsInstance || !hlsInstance.levels?.length) return;
-                            hlsInstance.currentLevel = highestLevel;
-                            hlsInstance.nextLevel = highestLevel;
-                            hlsInstance.loadLevel = highestLevel;
-                            qualitySelector.value = String(highestLevel);
-                        };
+                        if (window.tv365AdaptiveTimer) {
+                            clearTimeout(window.tv365AdaptiveTimer);
+                            window.tv365AdaptiveTimer = null;
+                        }
 
-                        videoPlayer.addEventListener(
-                            'playing',
-                            tv365GoHighest,
-                            { once: true }
-                        );
+                        window.tv365AdaptiveTimer = setTimeout(() => {
+                            if (!hlsInstance || currentPlayingUrl !== url) return;
+
+                            // Bảo đảm ABR vẫn AUTO sau 30 giây.
+                            hlsInstance.currentLevel = -1;
+                            hlsInstance.nextLevel = -1;
+                            hlsInstance.loadLevel = -1;
+                            hlsInstance.autoLevelCapping = highestLevel;
+
+                            const qs = document.getElementById('quality-selector');
+                            if (qs && !qs.disabled) qs.value = '-1';
+
+                            console.log('[TV365 Adaptive] 30s ổn định: tiếp tục AUTO, tự nâng/hạ theo mạng.');
+                        }, 30000);
                     }
 
                     videoPlayer.play().catch(e => {
@@ -2723,7 +2732,7 @@ font-weight:700;
                             opt.textContent = level.height ? `${level.height}p` : `Chất lượng ${i + 1}`;
                             qualitySelector.appendChild(opt);
                         });
-                        qualitySelector.value = String(highestLevel);
+                        qualitySelector.value = "-1";
                         qualitySelector.classList.remove('hidden');
                     } else {
                         const level = hlsInstance.levels && hlsInstance.levels.length === 1
