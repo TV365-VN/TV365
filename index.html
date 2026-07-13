@@ -515,7 +515,7 @@ font-weight:700;
             font-size: 19px;
             font-weight: 800;
             letter-spacing: .4px;
-            box-shadow: 0 0 8px rgba(255, 207, 72, .32);
+            box-shadow: 0 0 9px rgba(255, 76, 145, .38);
         }
 
         .tv365-premium-badge::before {
@@ -525,9 +525,9 @@ font-weight:700;
             height: 360%;
             background: conic-gradient(
                 transparent 0deg 205deg,
-                #67dfff 225deg,
-                #ffffff 250deg,
-                #ffd34e 275deg,
+                #ff7a00 225deg,
+                #ff3cac 250deg,
+                #ff9a3c 275deg,
                 transparent 300deg 360deg
             );
             animation: tv365TitanRun 2.8s linear infinite;
@@ -545,11 +545,55 @@ font-weight:700;
         .tv365-premium-badge span {
             position: relative;
             z-index: 1;
-            text-shadow: 0 0 7px rgba(255, 210, 80, .75);
+            text-shadow: 0 0 7px rgba(255, 122, 0, .72), 0 0 11px rgba(255, 60, 172, .45);
         }
 
         @keyframes tv365TitanRun {
             to { transform: rotate(360deg); }
+        }
+
+
+        /* V7.14 - Cậu bé cầm cờ Việt Nam trên Premium */
+        .tv365-premium-wrap {
+            position: relative;
+            display: inline-flex;
+            padding-top: 20px;
+            flex-shrink: 0;
+        }
+
+        .tv365-vn-boy {
+            position: absolute;
+            top: -9px;
+            right: 8px;
+            z-index: 5;
+            display: flex;
+            align-items: center;
+            pointer-events: none;
+            animation: tv365BoyFloat 2.2s ease-in-out infinite;
+        }
+
+        .tv365-boy {
+            font-size: 24px;
+            line-height: 1;
+        }
+
+        .tv365-flag {
+            display: inline-block;
+            margin-left: -3px;
+            font-size: 25px;
+            line-height: 1;
+            transform-origin: left center;
+            animation: tv365FlagWave .75s ease-in-out infinite alternate;
+        }
+
+        @keyframes tv365FlagWave {
+            from { transform: rotate(-7deg) skewY(-3deg) scaleX(.96); }
+            to   { transform: rotate(8deg) skewY(4deg) scaleX(1.05); }
+        }
+
+        @keyframes tv365BoyFloat {
+            0%, 100% { transform: translateY(0); }
+            50%      { transform: translateY(-2px); }
         }
 
 </style>
@@ -579,12 +623,18 @@ font-weight:700;
                                 Dành Cho Mọi Nhà
                                   </h1>
                             <span class="text-[9px] text-red-500 font-bold uppercase tracking-[0.1em] mt-1 block">
-    ( LƯU Ý: TRÊN TIVI/BOX MỞ PHẦN MỀM LÊN VÀ CHỜ 5 GIÂY RỒI HẪY BẤM REMOTE )
+    ( Kênh nào bị quay tròn, vui lòng chọn lại kênh 1 lần nữa để xem bình thường )
 </span>
                         </div>
                     </div>
-                    <div class="tv365-premium-badge" aria-label="Premium">
-                        <span>Premium</span>
+                    <div class="tv365-premium-wrap" aria-label="Premium">
+                        <div class="tv365-vn-boy" aria-hidden="true">
+                            <span class="tv365-boy">👦</span>
+                            <span class="tv365-flag">🇻🇳</span>
+                        </div>
+                        <div class="tv365-premium-badge">
+                            <span>Premium</span>
+                        </div>
                     </div>
                 </div>
 
