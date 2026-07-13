@@ -553,108 +553,373 @@ font-weight:700;
         }
 
 
-        /* V7.15 - Cậu bé toàn thân đứng cầm cờ Việt Nam */
+        /* V7.16 - Premium responsive + nhân vật đứng trên khung */
         .tv365-premium-wrap {
             position: relative;
-            display: inline-flex;
-            padding-top: 29px;
+            display: inline-flex !important;
+            align-items: flex-end;
+            justify-content: center;
+            min-width: 116px;
+            padding-top: 24px;
+            overflow: visible !important;
+            flex: 0 0 auto;
+            z-index: 20;
+        }
+
+        .tv365-premium-badge {
+            position: relative;
+            display: inline-flex !important;
+            align-items: center;
+            justify-content: center;
+            min-width: 112px;
+            height: 44px;
+            padding: 0 16px;
+            border-radius: 13px;
+            overflow: hidden;
             flex-shrink: 0;
+            background: #091126;
+            color: #ffd86b;
+            font-size: 19px;
+            font-weight: 800;
+            letter-spacing: .4px;
+            box-shadow:
+                0 0 8px rgba(255, 76, 145, .34),
+                0 0 11px rgba(0, 210, 255, .18);
         }
 
-        .tv365-vn-boy {
+        .tv365-premium-badge::before {
+            content: "";
             position: absolute;
-            top: -7px;
-            right: 5px;
-            width: 64px;
-            height: 48px;
-            z-index: 5;
-            pointer-events: none;
-            animation: tv365BoyFloat 2.4s ease-in-out infinite;
+            width: 170%;
+            height: 390%;
+            background: conic-gradient(
+                transparent 0deg 170deg,
+                #ff7a00 195deg,
+                #ff3cac 225deg,
+                #00d5ff 255deg,
+                #2388ff 280deg,
+                #ff9a3c 305deg,
+                transparent 330deg 360deg
+            );
+            animation: tv365TitanRun 2.8s linear infinite;
+            will-change: transform;
         }
 
-        .tv365-boy-head {
+        .tv365-premium-badge::after {
+            content: "";
+            position: absolute;
+            inset: 2px;
+            border-radius: 11px;
+            background: #091126;
+        }
+
+        .tv365-premium-badge > span {
+            position: relative;
+            z-index: 2;
+            text-shadow:
+                0 0 7px rgba(255, 122, 0, .65),
+                0 0 10px rgba(255, 60, 172, .42),
+                0 0 12px rgba(0, 213, 255, .24);
+        }
+
+        .tv365-flag-boy {
+            position: absolute;
+            left: 9px;
+            bottom: 39px;
+            width: 55px;
+            height: 50px;
+            z-index: 8;
+            pointer-events: none;
+            transform-origin: center bottom;
+            animation: tv365BoyStand 2.5s ease-in-out infinite;
+        }
+
+        .boy-face {
+            position: absolute;
+            left: 10px;
+            top: 5px;
+            width: 13px;
+            height: 14px;
+            border-radius: 48% 48% 44% 44%;
+            background: #e8a36f;
+            z-index: 3;
+        }
+
+        .boy-hair {
+            position: absolute;
+            left: 9px;
+            top: 2px;
+            width: 15px;
+            height: 9px;
+            border-radius: 9px 9px 4px 4px;
+            background: #20130f;
+            transform: rotate(-5deg);
+            z-index: 4;
+        }
+
+        .boy-neck {
+            position: absolute;
+            left: 14px;
+            top: 17px;
+            width: 5px;
+            height: 4px;
+            background: #e8a36f;
+        }
+
+        .boy-shirt {
             position: absolute;
             left: 8px;
-            top: 1px;
-            width: 13px;
-            height: 13px;
-            border-radius: 50%;
-            background: #f2b27f;
-            box-shadow: inset 0 4px 0 #2b1b16;
+            top: 20px;
+            width: 18px;
+            height: 15px;
+            border-radius: 5px 5px 2px 2px;
+            background: linear-gradient(180deg, #ef3340, #b91425);
         }
 
-        .tv365-boy-body {
+        .boy-arm {
             position: absolute;
-            left: 7px;
-            top: 13px;
-            width: 16px;
-            height: 19px;
-            border-radius: 5px 5px 3px 3px;
-            background: #e53935;
-        }
-
-        .tv365-boy-arm {
-            position: absolute;
-            left: 20px;
-            top: 16px;
+            left: 23px;
+            top: 22px;
             width: 13px;
             height: 4px;
             border-radius: 4px;
-            background: #f2b27f;
-            transform: rotate(-18deg);
+            background: #e8a36f;
+            transform: rotate(-23deg);
             transform-origin: left center;
+            z-index: 5;
         }
 
-        .tv365-boy-leg {
+        .boy-shorts {
             position: absolute;
-            top: 30px;
-            width: 5px;
-            height: 14px;
-            border-radius: 0 0 3px 3px;
-            background: #173a73;
+            left: 9px;
+            top: 34px;
+            width: 16px;
+            height: 7px;
+            border-radius: 1px 1px 3px 3px;
+            background: #173d78;
         }
 
-        .tv365-boy-leg.left { left: 9px; }
-        .tv365-boy-leg.right { left: 18px; }
-
-        .tv365-flag-pole {
+        .boy-leg {
             position: absolute;
-            left: 31px;
+            top: 39px;
+            width: 4px;
+            height: 8px;
+            background: #d99161;
+        }
+
+        .boy-leg-left { left: 11px; }
+        .boy-leg-right { left: 20px; }
+
+        .boy-shoe {
+            position: absolute;
+            top: 46px;
+            width: 7px;
+            height: 3px;
+            border-radius: 3px 3px 1px 1px;
+            background: #161616;
+        }
+
+        .boy-shoe-left { left: 8px; }
+        .boy-shoe-right { left: 18px; }
+
+        .vn-pole {
+            position: absolute;
+            left: 34px;
             top: 4px;
             width: 2px;
-            height: 40px;
+            height: 44px;
             border-radius: 2px;
-            background: #f1f1f1;
+            background: #e9eef7;
+            box-shadow: 0 0 2px rgba(255,255,255,.55);
         }
 
-        .tv365-vietnam-flag {
+        .vn-flag {
             position: absolute;
-            left: 33px;
+            left: 36px;
             top: 5px;
-            width: 28px;
-            height: 18px;
+            width: 19px;
+            height: 13px;
             display: flex;
             align-items: center;
             justify-content: center;
             background: #da251d;
             transform-origin: left center;
-            animation: tv365FlagWave .75s ease-in-out infinite alternate;
+            animation: tv365FlagWave .72s ease-in-out infinite alternate;
         }
 
-        .tv365-vietnam-flag span {
+        .vn-flag span {
             color: #ffeb3b;
-            font-size: 12px;
+            font-size: 8px;
             line-height: 1;
         }
 
-        @keyframes tv365FlagWave {
-            from { transform: skewY(-3deg) scaleX(.96); }
-            to   { transform: skewY(4deg) scaleX(1.05); }
+        @keyframes tv365TitanRun {
+            to { transform: rotate(360deg); }
         }
 
-        @keyframes tv365BoyFloat {
-            0%, 100% { transform: translateY(0); }
-            50%      { transform: translateY(-1px); }
+        @keyframes tv365FlagWave {
+            from { transform: skewY(-4deg) scaleX(.94); }
+            to   { transform: skewY(5deg) scaleX(1.06); }
+        }
+
+        @keyframes tv365BoyStand {
+            0%, 100% { transform: rotate(-1deg); }
+            50%      { transform: rotate(1deg); }
+        }
+
+        /* Hiện ổn định trên điện thoại và TV, không bị header cắt mất */
+        @media (max-width: 900px) {
+            .tv365-premium-wrap {
+                min-width: 102px;
+                padding-top: 22px;
+                transform: scale(.88);
+                transform-origin: right center;
+            }
+        }
+
+        @media (max-width: 520px) {
+            .tv365-premium-wrap {
+                min-width: 92px;
+                margin-left: 2px;
+                transform: scale(.78);
+                transform-origin: right center;
+            }
+        }
+
+
+        /* V7.17 PREMIUM HERO - chỉ giao diện */
+        .tv365-premium-wrap {
+            position: relative !important;
+            display: inline-flex !important;
+            padding-top: 30px !important;
+            overflow: visible !important;
+            flex-shrink: 0 !important;
+            isolation: isolate;
+        }
+
+        .tv365-premium-badge {
+            min-width: 128px !important;
+            height: 48px !important;
+            border-radius: 17px !important;
+            overflow: hidden !important;
+            background: #070b18 !important;
+            box-shadow:
+                0 0 7px rgba(255,122,0,.65),
+                0 0 11px rgba(255,47,177,.48),
+                0 0 15px rgba(0,200,255,.38) !important;
+        }
+
+        .tv365-premium-badge::before {
+            width: 190% !important;
+            height: 430% !important;
+            background: conic-gradient(
+                transparent 0deg 180deg,
+                #ff7a00 205deg,
+                #ff2fb1 238deg,
+                #9d4dff 262deg,
+                #00c8ff 292deg,
+                #55f4ff 315deg,
+                transparent 342deg 360deg
+            ) !important;
+            animation: tv365TitanRun 2.5s linear infinite !important;
+        }
+
+        .tv365-premium-badge::after {
+            inset: 3px !important;
+            border-radius: 14px !important;
+            background:
+                radial-gradient(circle at 50% 0%, rgba(68,93,150,.16), transparent 55%),
+                #070b18 !important;
+        }
+
+        .tv365-premium-badge span {
+            font-size: 21px !important;
+            color: #ffd978 !important;
+            background: linear-gradient(90deg,#ff8a00,#ffd35a,#ff55c8,#67ddff);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: none !important;
+        }
+
+        .tv365-premium-hero {
+            position: absolute;
+            z-index: 8;
+            width: 78px;
+            height: 63px;
+            left: 50%;
+            top: -27px;
+            transform: translateX(-50%);
+            pointer-events: none;
+            overflow: visible;
+        }
+
+        .tv365-premium-hero svg {
+            width: 100%;
+            height: 100%;
+            overflow: visible;
+        }
+
+        .tv365-skin { fill: #f2b27f; }
+        .tv365-hair { fill: #2a1a16; }
+        .tv365-shirt { fill: #e53935; }
+
+        .tv365-hero-float {
+            transform-origin: 58px 105px;
+            animation: tv365HeroFloat 2.4s ease-in-out infinite;
+        }
+
+        .tv365-real-flag {
+            transform-origin: 87px 35px;
+            animation: tv365FlagRealWave .72s ease-in-out infinite alternate;
+        }
+
+        .tv365-premium-sparks {
+            position: absolute;
+            inset: 23px -8px -8px -8px;
+            z-index: 7;
+            pointer-events: none;
+        }
+
+        .tv365-premium-sparks i {
+            position: absolute;
+            width: 3px;
+            height: 3px;
+            border-radius: 50%;
+            background: #fff;
+            box-shadow: 0 0 7px currentColor;
+            animation: tv365Spark 1.8s ease-in-out infinite;
+        }
+
+        .tv365-premium-sparks i:nth-child(1){left:3%;top:26%;color:#ff7a00;animation-delay:.1s}
+        .tv365-premium-sparks i:nth-child(2){left:14%;top:88%;color:#ff2fb1;animation-delay:.6s}
+        .tv365-premium-sparks i:nth-child(3){left:36%;top:4%;color:#ff9d00;animation-delay:1.1s}
+        .tv365-premium-sparks i:nth-child(4){left:55%;top:94%;color:#ff49c7;animation-delay:.3s}
+        .tv365-premium-sparks i:nth-child(5){left:76%;top:7%;color:#00c8ff;animation-delay:.9s}
+        .tv365-premium-sparks i:nth-child(6){left:96%;top:34%;color:#42e9ff;animation-delay:1.4s}
+        .tv365-premium-sparks i:nth-child(7){left:88%;top:91%;color:#00aaff;animation-delay:.5s}
+        .tv365-premium-sparks i:nth-child(8){left:5%;top:65%;color:#ff55a8;animation-delay:1.3s}
+
+        @keyframes tv365FlagRealWave {
+            from { transform: skewY(-2deg) scaleX(.97); }
+            to   { transform: skewY(5deg) scaleX(1.05); }
+        }
+
+        @keyframes tv365HeroFloat {
+            0%,100% { transform: translateY(0) rotate(-1deg); }
+            50% { transform: translateY(-1.5px) rotate(1deg); }
+        }
+
+        @keyframes tv365Spark {
+            0%,100% { opacity:.15; transform:scale(.5); }
+            50% { opacity:1; transform:scale(1.8); }
+        }
+
+        @media (max-width: 768px) {
+            .tv365-premium-wrap { padding-top: 25px !important; }
+            .tv365-premium-badge { min-width: 104px !important; height: 42px !important; }
+            .tv365-premium-badge span { font-size: 17px !important; }
+            .tv365-premium-hero { width: 65px; height: 53px; top: -22px; }
         }
 
 </style>
@@ -684,21 +949,36 @@ font-weight:700;
                                 Dành Cho Mọi Nhà
                                   </h1>
                             <span class="text-[9px] text-red-500 font-bold uppercase tracking-[0.1em] mt-1 block">
-    ( Kênh nào bị quay tròn, vui lòng chọn lại kênh 1 lần nữa để xem bình thường )
+    ( LƯU Ý: TRÊN TIVI/BOX MỞ PHẦN MỀM LÊN CHỜ 3 GIÂY RỒI HÃY BẤM CHỌN KÊNH )
 </span>
                         </div>
                     </div>
                     <div class="tv365-premium-wrap" aria-label="Premium">
-                        <div class="tv365-vn-boy" aria-hidden="true">
-                            <div class="tv365-boy-head"></div>
-                            <div class="tv365-boy-body"></div>
-                            <div class="tv365-boy-arm"></div>
-                            <div class="tv365-boy-leg left"></div>
-                            <div class="tv365-boy-leg right"></div>
-                            <div class="tv365-flag-pole"></div>
-                            <div class="tv365-vietnam-flag">
-                                <span>★</span>
-                            </div>
+                        <div class="tv365-premium-hero" aria-hidden="true">
+                            <svg viewBox="0 0 150 120" xmlns="http://www.w3.org/2000/svg">
+                                <g class="tv365-hero-float">
+                                    <path class="tv365-hair" d="M35 29c3-17 31-23 43-6 7-3 13 5 8 11-3 4-7 4-10 3-2 15-31 17-39 3-8 1-10-8-2-11z"/>
+                                    <circle class="tv365-skin" cx="57" cy="38" r="18"/>
+                                    <path class="tv365-hair" d="M39 34c2-16 29-23 38-7-8-3-13 1-19-2-5 7-12 8-19 9z"/>
+                                    <circle cx="50" cy="38" r="1.8" fill="#241813"/>
+                                    <circle cx="64" cy="38" r="1.8" fill="#241813"/>
+                                    <path d="M51 46q6 6 12 0" fill="none" stroke="#a63f32" stroke-width="2" stroke-linecap="round"/>
+                                    <path class="tv365-shirt" d="M43 56q14-7 28 0l4 29H39z"/>
+                                    <path class="tv365-skin" d="M43 60q-11 7-14 18l6 2q5-9 13-13z"/>
+                                    <path class="tv365-skin" d="M69 60q11 3 17 11l-4 5q-8-7-15-8z"/>
+                                    <polygon points="57,62 60,68 67,69 62,74 64,81 57,77 50,81 52,74 47,69 54,68" fill="#ffeb3b"/>
+                                    <path d="M42 84h13v20H40zM59 84h13l2 20H60z" fill="#173a73"/>
+                                    <path d="M37 102h19v7H36q-4-3 1-7zM59 102h18q5 4 0 7H59z" fill="#f7f7f7"/>
+                                    <rect x="84" y="14" width="3.5" height="91" rx="1.5" fill="#e8edf5"/>
+                                    <g class="tv365-real-flag">
+                                        <path d="M87 16c18-8 35 9 59-1v39c-24 10-41-7-59 1z" fill="#da251d"/>
+                                        <polygon points="116,25 120,36 132,36 122,43 126,54 116,47 106,54 110,43 100,36 112,36" fill="#ffeb3b"/>
+                                    </g>
+                                </g>
+                            </svg>
+                        </div>
+                        <div class="tv365-premium-sparks" aria-hidden="true">
+                            <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
                         </div>
                         <div class="tv365-premium-badge">
                             <span>Premium</span>
