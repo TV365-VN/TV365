@@ -1829,7 +1829,7 @@ font-weight:700;
             tv365FreezeLastTime = nowTime;
 
             // 3 lần x 4 giây = khoảng 12 giây đứng hình thật sự mới tải lại kênh.
-            if (tv365FreezeCount >= 3 && !tv365FreezeReloading) {
+            if (false && tv365FreezeCount >= 3 && !tv365FreezeReloading) {
                 const channel = window.tv365CurrentChannel;
                 if (!channel) return;
 
@@ -2774,7 +2774,7 @@ font-weight:700;
                 hlsInstance = new Hls({
                     enableWorker: true,
                     lowLatencyMode: false,
-                    autoStartLoad: !tv365WeakVtvFastMode,
+                    autoStartLoad: true,
 
                     startLevel: -1,
                     testBandwidth: true,
@@ -2858,10 +2858,9 @@ font-weight:700;
                         const tv365FastVtvStart = tv365IsTvVtv(channel);
                         const tv365WeakVtvTv = tv365FastVtvStart && tv365IsWeakHdTv();
 
-                        // Xiaomi L32/TV HD yếu + VTV:
-                        // chọn thẳng rendition 720p ổn định rồi mới bắt đầu tải fragment.
-                        // Không test băng thông/không nhảy 0 -> AUTO -> 1080p, giúp vào kênh nhanh
-                        // và tránh decoder treo sau khoảng 1 phút.
+                        // Android TV HD + VTV: AUTO thận trọng, chỉ giới hạn trần 720p.
+                        // Không khóa currentLevel/nextLevel/loadLevel vì ép level cứng có thể
+                        // làm Xiaomi L32 đứng hình hoặc nháy khi fragment/rendition đổi.
                         if (tv365WeakVtvTv) {
                             let best720 = -1;
                             hlsInstance.levels.forEach((level, index) => {
@@ -2869,21 +2868,16 @@ font-weight:700;
                                 if (h > 0 && h <= 720) {
                                     if (
                                         best720 < 0 ||
-                                        h > Number(hlsInstance.levels[best720]?.height || 0) ||
-                                        (
-                                            h === Number(hlsInstance.levels[best720]?.height || 0) &&
-                                            Number(level.bitrate || 0) > Number(hlsInstance.levels[best720]?.bitrate || 0)
-                                        )
+                                        h > Number(hlsInstance.levels[best720]?.height || 0)
                                     ) best720 = index;
                                 }
                             });
 
-                            const stableLevel = best720 >= 0 ? best720 : 0;
-                            hlsInstance.currentLevel = stableLevel;
-                            hlsInstance.nextLevel = stableLevel;
-                            hlsInstance.loadLevel = stableLevel;
-                            hlsInstance.autoLevelCapping = stableLevel;
-                            hlsInstance.startLoad(-1);
+                            hlsInstance.startLevel = -1;
+                            hlsInstance.currentLevel = -1;
+                            hlsInstance.nextLevel = -1;
+                            hlsInstance.loadLevel = -1;
+                            if (best720 >= 0) hlsInstance.autoLevelCapping = best720;
                         } else {
                             hlsInstance.startLevel = -1;
                             hlsInstance.currentLevel = -1;
