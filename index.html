@@ -2803,13 +2803,13 @@ font-weight:700;
 
                     // TV khởi động với ước lượng mạng thận trọng; chỉ nâng chất lượng khi đủ ổn định.
                     // Giảm việc nhảy level liên tục gây nháy trên một số Android TV/Xiaomi TV.
-                    abrEwmaFastLive: __tvIsAndroidTv() ? 5 : 3,
-                    abrEwmaSlowLive: __tvIsAndroidTv() ? 12 : 6,
+                    abrEwmaFastLive: __tvIsAndroidTv() ? 8 : 3,
+                    abrEwmaSlowLive: __tvIsAndroidTv() ? 20 : 6,
                     abrBandWidthFactor: __tvIsAndroidTv()
                         ? 0.72
                         : (tv365AdaptiveProfile().lowDevice ? 0.70 : 0.90),
                     abrBandWidthUpFactor: __tvIsAndroidTv()
-                        ? 0.55
+                        ? 0.45
                         : (tv365AdaptiveProfile().lowDevice ? 0.55 : 0.80),
                     abrEwmaDefaultEstimate: __tvIsAndroidTv()
                         ? 2200000
@@ -2858,9 +2858,9 @@ font-weight:700;
                         const tv365FastVtvStart = tv365IsTvVtv(channel);
                         const tv365WeakVtvTv = tv365FastVtvStart && tv365IsWeakHdTv();
 
-                        // Android TV HD + VTV: AUTO thận trọng, chỉ giới hạn trần 720p.
-                        // Không khóa currentLevel/nextLevel/loadLevel vì ép level cứng có thể
-                        // làm Xiaomi L32 đứng hình hoặc nháy khi fragment/rendition đổi.
+                        // TV HD + VTV: chọn 1 rendition 720p và giữ ổn định.
+                        // Chỉ khóa currentLevel một lần sau manifest; không ép next/load/startLoad,
+                        // không timer đổi level và không reload player.
                         if (tv365WeakVtvTv) {
                             let best720 = -1;
                             hlsInstance.levels.forEach((level, index) => {
@@ -2873,11 +2873,10 @@ font-weight:700;
                                 }
                             });
 
-                            hlsInstance.startLevel = -1;
-                            hlsInstance.currentLevel = -1;
-                            hlsInstance.nextLevel = -1;
-                            hlsInstance.loadLevel = -1;
-                            if (best720 >= 0) hlsInstance.autoLevelCapping = best720;
+                            if (best720 >= 0) {
+                                hlsInstance.autoLevelCapping = best720;
+                                hlsInstance.currentLevel = best720;
+                            }
                         } else {
                             hlsInstance.startLevel = -1;
                             hlsInstance.currentLevel = -1;
