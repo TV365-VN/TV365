@@ -1799,8 +1799,56 @@ font-weight:700;
             }, 450);
         });
 
-        videoPlayer.addEventListener('stalled', tv365RecoverTvPlayback);
-        videoPlayer.addEventListener('waiting', tv365RecoverTvPlayback);
+        // Xiaomi TV: không ép startLoad/seek ngay mỗi lần waiting/stalled.
+        // Một số WebView bị đứng decoder nếu recover liên tục.
+        videoPlayer.addEventListener('stalled', () => {});
+        videoPlayer.addEventListener('waiting', () => {});
+
+        // === TV365 Xiaomi Frozen Frame Guard V1 ===
+        let tv365FreezeLastTime = -1;
+        let tv365FreezeCount = 0;
+        let tv365FreezeReloading = false;
+
+        setInterval(() => {
+            if (!__tvIsAndroidTv() || !currentPlayingUrl || videoPlayer.ended || videoPlayer.paused) {
+                tv365FreezeLastTime = videoPlayer.currentTime || -1;
+                tv365FreezeCount = 0;
+                return;
+            }
+
+            const nowTime = Number(videoPlayer.currentTime || 0);
+            const moved = tv365FreezeLastTime < 0 || Math.abs(nowTime - tv365FreezeLastTime) >= 0.25;
+
+            if (moved) {
+                tv365FreezeCount = 0;
+                tv365FreezeLastTime = nowTime;
+                return;
+            }
+
+            tv365FreezeCount++;
+            tv365FreezeLastTime = nowTime;
+
+            // 3 lần x 4 giây = khoảng 12 giây đứng hình thật sự mới tải lại kênh.
+            if (tv365FreezeCount >= 3 && !tv365FreezeReloading) {
+                const channel = window.tv365CurrentChannel;
+                if (!channel) return;
+
+                tv365FreezeReloading = true;
+                tv365FreezeCount = 0;
+
+                try {
+                    if (hlsInstance) hlsInstance.stopLoad();
+                } catch (_) {}
+
+                setTimeout(() => {
+                    playChannel(channel)
+                        .catch?.(() => {})
+                        .finally?.(() => {
+                            setTimeout(() => { tv365FreezeReloading = false; }, 1500);
+                        });
+                }, 250);
+            }
+        }, 4000);
 
         // === Blob URL tracker — để cleanup khi stop ===
         let currentBlobUrl = null;
@@ -2277,6 +2325,7 @@ font-weight:700;
 
             const url = channel.url;
             currentPlayingUrl = url;
+            window.tv365CurrentChannel = channel;
             const tv365SctvTvMode = tv365IsTvSctv(channel);
 
             if (window.tv365SctvWatchdog) {
@@ -2795,22 +2844,14 @@ font-weight:700;
                         // mạng yếu/buffer tăng thì tự hạ xuống level phù hợp.
                         const tv365FastVtvStart = tv365IsTvVtv(channel);
 
-                        // Xiaomi/Android TV + VTV: lấy level thấp nhất trước để có hình nhanh.
-                        // Khi video đã phát, trả ngay về AUTO để tự nâng/hạ theo mạng.
-                        hlsInstance.startLevel = tv365FastVtvStart ? 0 : -1;
+                        // Xiaomi/Android TV + VTV: để Hls.js AUTO ngay từ đầu.
+                        // Không ép level 0 rồi đổi sang AUTO khi đang phát vì một số Xiaomi TV
+                        // có thể kẹt decoder khi đổi rendition sau khoảng 1 phút.
+                        hlsInstance.startLevel = -1;
                         hlsInstance.currentLevel = -1;
                         hlsInstance.nextLevel = -1;
                         hlsInstance.loadLevel = -1;
                         hlsInstance.autoLevelCapping = highestLevel;
-
-                        if (tv365FastVtvStart) {
-                            videoPlayer.addEventListener('playing', () => {
-                                if (!hlsInstance || currentPlayingUrl !== url) return;
-                                hlsInstance.currentLevel = -1;
-                                hlsInstance.nextLevel = -1;
-                                hlsInstance.loadLevel = -1;
-                            }, { once: true });
-                        }
 
                         if (window.tv365AdaptiveTimer) {
                             clearTimeout(window.tv365AdaptiveTimer);
@@ -2820,7 +2861,9 @@ font-weight:700;
                         window.tv365AdaptiveTimer = setTimeout(() => {
                             if (!hlsInstance || currentPlayingUrl !== url) return;
 
-                            // Bảo đảm ABR vẫn AUTO sau 30 giây.
+                            // VTV trên Android TV đã AUTO ổn định từ đầu: không ghi lại level giữa luồng.
+                            if (tv365FastVtvStart) return;
+
                             hlsInstance.currentLevel = -1;
                             hlsInstance.nextLevel = -1;
                             hlsInstance.loadLevel = -1;
@@ -2955,6 +2998,13 @@ font-weight:700;
 
                 hlsInstance.on(Hls.Events.ERROR, (event, data) => {
                     const adaptiveDetails = String(data?.details || "").toLowerCase();
+
+                    // VTV + Android TV: tránh recoverMediaError/startLoad lặp làm WebView Xiaomi treo cứng.
+                    // Frozen Frame Guard sẽ tải lại sạch đúng kênh nếu hình thật sự đứng ~12 giây.
+                    if (tv365IsTvVtv(channel) && data.fatal) {
+                        console.warn('[TV365 VTV TV] Fatal HLS error; chờ clean reload guard.', data.details);
+                        return;
+                    }
 
                     if (
                         tv365AdaptiveProfile().lowDevice &&
@@ -3694,6 +3744,45 @@ window.TV365_RESET_TV_FOCUS = function () {
         }
     }, true);
 })();
+</script>
+
+
+<script>
+// === TV365 TV BACK SAFE FALLBACK ===
+// Chỉ bắt phím Back/Escape của trang web; không đụng DPAD hoặc CH+/CH-.
+document.addEventListener('keydown', function (e) {
+    if (!__tvIsAndroidTv()) return;
+
+    const key = String(e.key || '').toLowerCase();
+    const code = e.keyCode || e.which || 0;
+    const isBack = key === 'escape' || key === 'browserback' || key === 'goback' || code === 4 || code === 27;
+
+    if (!isBack) return;
+
+    const container = document.querySelector('.video-container');
+    const inTvFullscreen =
+        document.body.classList.contains('tv365-tv-fullscreen') ||
+        document.fullscreenElement ||
+        (container && getComputedStyle(container).position === 'fixed');
+
+    if (inTvFullscreen) {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+
+        try { document.exitFullscreen?.(); } catch (_) {}
+        try { window.__tvExitFullscreen?.(); } catch (_) {}
+        try { window.exitTvFullscreen?.(); } catch (_) {}
+
+        document.body.classList.remove('tv365-tv-fullscreen');
+
+        if (container) {
+            ['position','inset','left','top','right','bottom','width','height','z-index']
+                .forEach(p => container.style.removeProperty(p));
+        }
+
+        setTimeout(() => window.TV365_RESET_TV_FOCUS?.(), 50);
+    }
+}, true);
 </script>
 
 </body>
