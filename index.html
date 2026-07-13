@@ -1469,7 +1469,6 @@ font-weight:700;
             currentCategory = 'Tất cả';
             renderCategoryTabs();
             filterChannels();
-            showToast(`Đã tải thành công ${allChannels.length} kênh.`);
         }
 
         // Tải File Local
@@ -1526,7 +1525,6 @@ font-weight:700;
                 return;
             }
 
-            showToast('Đang kết nối URL...', 'success');
             let text = '';
 
             // Danh sách các proxy để thử nghiệm vượt rào CORS
@@ -1720,25 +1718,58 @@ font-weight:700;
         }
 
 
-        // === TV365 Live Auto Resume ===
+        // === TV365 Android TV Auto Resume / Stall Recovery V3 ===
         let tv365InternalPause = false;
         let tv365ResumeTimer = null;
+        let tv365TvRecoverTimer = null;
+
+        function tv365RecoverTvPlayback() {
+            if (
+                !__tvIsAndroidTv() ||
+                tv365InternalPause ||
+                !currentPlayingUrl ||
+                videoPlayer.ended
+            ) return;
+
+            clearTimeout(tv365TvRecoverTimer);
+            tv365TvRecoverTimer = setTimeout(() => {
+                if (!currentPlayingUrl || videoPlayer.ended) return;
+
+                try {
+                    if (hlsInstance && videoPlayer.readyState < 2) {
+                        hlsInstance.startLoad(-1);
+                    }
+                } catch (_) {}
+
+                videoPlayer.play().catch(() => {
+                    const retryPlay = () => {
+                        videoPlayer.removeEventListener('canplay', retryPlay);
+                        if (currentPlayingUrl && !videoPlayer.ended) {
+                            videoPlayer.play().catch(() => {});
+                        }
+                    };
+                    videoPlayer.addEventListener('canplay', retryPlay, { once: true });
+                });
+            }, 300);
+        }
 
         videoPlayer.addEventListener('pause', () => {
             if (tv365InternalPause || !currentPlayingUrl || videoPlayer.ended) return;
+
             clearTimeout(tv365ResumeTimer);
             tv365ResumeTimer = setTimeout(() => {
-                if (
-                    !tv365InternalPause &&
-                    currentPlayingUrl &&
-                    videoPlayer.paused &&
-                    !videoPlayer.ended &&
-                    videoPlayer.readyState >= 2
-                ) {
+                if (!currentPlayingUrl || videoPlayer.ended) return;
+
+                if (__tvIsAndroidTv()) {
+                    tv365RecoverTvPlayback();
+                } else if (videoPlayer.paused && videoPlayer.readyState >= 2) {
                     videoPlayer.play().catch(() => {});
                 }
             }, 450);
         });
+
+        videoPlayer.addEventListener('stalled', tv365RecoverTvPlayback);
+        videoPlayer.addEventListener('waiting', tv365RecoverTvPlayback);
 
         // === Blob URL tracker — để cleanup khi stop ===
         let currentBlobUrl = null;
@@ -1925,7 +1956,6 @@ font-weight:700;
                 epgData = tempEpgData;
                 epgFetchStatus = 'success';
                 console.log(`Đã tải xong EPG cho ${epgData.size} kênh.`);
-                showToast(`Đã cập nhật lịch phát sóng (${epgData.size} kênh)`);
 
                 // Refresh UI if needed
                 filterChannels();
@@ -2233,6 +2263,8 @@ font-weight:700;
             if (window.audioCheckInterval) { clearInterval(window.audioCheckInterval); window.audioCheckInterval = null; }
             if (window._audioDriftInterval) { clearInterval(window._audioDriftInterval); window._audioDriftInterval = null; }
             if (window.tv365AdaptiveTimer) { clearTimeout(window.tv365AdaptiveTimer); window.tv365AdaptiveTimer = null; }
+            if (tv365ResumeTimer) { clearTimeout(tv365ResumeTimer); tv365ResumeTimer = null; }
+            if (tv365TvRecoverTimer) { clearTimeout(tv365TvRecoverTimer); tv365TvRecoverTimer = null; }
             if (hlsInstance) { hlsInstance.destroy(); hlsInstance = null; }
             if (shakaInstance) {
                 await shakaInstance.destroy();
@@ -2607,16 +2639,17 @@ font-weight:700;
                     testBandwidth: true,
                     capLevelToPlayerSize: true,
 
-                    backBufferLength: 30,
-                    maxBufferLength: __tvIsAndroidTv() ? 36 : 24,
-                    maxMaxBufferLength: __tvIsAndroidTv() ? 60 : 45,
-                    maxBufferSize: 60 * 1000 * 1000,
+                    // Android TV yếu: buffer vừa phải để vào kênh nhanh hơn và giảm áp lực RAM.
+                    backBufferLength: __tvIsAndroidTv() ? 15 : 30,
+                    maxBufferLength: __tvIsAndroidTv() ? 18 : 24,
+                    maxMaxBufferLength: __tvIsAndroidTv() ? 30 : 45,
+                    maxBufferSize: __tvIsAndroidTv() ? 30 * 1000 * 1000 : 60 * 1000 * 1000,
 
-                    liveSyncDurationCount: __tvIsAndroidTv() ? 6 : 4,
-                    liveMaxLatencyDurationCount: __tvIsAndroidTv() ? 14 : 10,
+                    liveSyncDurationCount: __tvIsAndroidTv() ? 3 : 4,
+                    liveMaxLatencyDurationCount: __tvIsAndroidTv() ? 8 : 10,
 
-                    maxBufferHole: __tvIsAndroidTv() ? 1.5 : 0.5,
-                    highBufferWatchdogPeriod: __tvIsAndroidTv() ? 12 : 3,
+                    maxBufferHole: __tvIsAndroidTv() ? 0.8 : 0.5,
+                    highBufferWatchdogPeriod: __tvIsAndroidTv() ? 4 : 3,
 
                     manifestLoadingMaxRetry: 4,
                     manifestLoadingRetryDelay: 500,
@@ -2627,19 +2660,21 @@ font-weight:700;
                     fragLoadingMaxRetry: 6,
                     fragLoadingRetryDelay: 500,
 
-                    abrEwmaFastLive: 3,
-                    abrEwmaSlowLive: 6,
+                    // TV khởi động với ước lượng mạng thận trọng; chỉ nâng chất lượng khi đủ ổn định.
+                    // Giảm việc nhảy level liên tục gây nháy trên một số Android TV/Xiaomi TV.
+                    abrEwmaFastLive: __tvIsAndroidTv() ? 5 : 3,
+                    abrEwmaSlowLive: __tvIsAndroidTv() ? 12 : 6,
                     abrBandWidthFactor: __tvIsAndroidTv()
-                        ? 0.82
+                        ? 0.72
                         : (tv365AdaptiveProfile().lowDevice ? 0.70 : 0.90),
                     abrBandWidthUpFactor: __tvIsAndroidTv()
-                        ? 0.70
+                        ? 0.55
                         : (tv365AdaptiveProfile().lowDevice ? 0.55 : 0.80),
                     abrEwmaDefaultEstimate: __tvIsAndroidTv()
-                        ? 5000000
+                        ? 2200000
                         : (tv365AdaptiveProfile().lowDevice ? 1800000 : 8000000),
                     abrEwmaDefaultEstimateMax: __tvIsAndroidTv()
-                        ? 20000000
+                        ? 12000000
                         : (tv365AdaptiveProfile().lowDevice ? 8000000 : 20000000),
 
                     stretchShortVideoTrack: false,
