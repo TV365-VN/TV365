@@ -3637,6 +3637,75 @@ window.TV365_RESET_TV_FOCUS = function () {
 // ================= END TV365 DPAD V8 =================
 </script>
 
+
+<script>
+// === TV365 TV CHANNEL +/- V6 ===
+// CH+, ChannelUp, PageUp: kênh kế tiếp
+// CH-, ChannelDown, PageDown: kênh trước
+(function () {
+    let tv365ChannelSwitchLock = false;
+
+    function tv365SwitchChannel(step) {
+        if (!__tvIsAndroidTv() || tv365ChannelSwitchLock) return;
+
+        const items = [...document.querySelectorAll('.channel-item')];
+        if (!items.length) return;
+
+        let index = items.findIndex(el =>
+            el.classList.contains('playing') ||
+            el.classList.contains('active') ||
+            el.dataset?.id === selectedChannelId ||
+            el.dataset?.channelId === selectedChannelId
+        );
+
+        if (index < 0 && typeof channelIndex !== 'undefined') {
+            index = Math.max(0, Math.min(channelIndex, items.length - 1));
+        }
+        if (index < 0) index = 0;
+
+        let next = index + step;
+        if (next >= items.length) next = 0;
+        if (next < 0) next = items.length - 1;
+
+        tv365ChannelSwitchLock = true;
+
+        if (typeof channelIndex !== 'undefined') channelIndex = next;
+        items[next].click();
+
+        setTimeout(() => {
+            tv365ChannelSwitchLock = false;
+        }, 700);
+    }
+
+    document.addEventListener('keydown', function (e) {
+        if (!__tvIsAndroidTv()) return;
+
+        const key = e.key || '';
+        const code = e.keyCode || e.which || 0;
+
+        const channelUp =
+            key === 'ChannelUp' ||
+            key === 'PageUp' ||
+            code === 166;
+
+        const channelDown =
+            key === 'ChannelDown' ||
+            key === 'PageDown' ||
+            code === 167;
+
+        if (channelUp) {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            tv365SwitchChannel(1);
+        } else if (channelDown) {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            tv365SwitchChannel(-1);
+        }
+    }, true);
+})();
+</script>
+
 </body>
 
 </html>
