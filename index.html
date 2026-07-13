@@ -2803,13 +2803,13 @@ font-weight:700;
 
                     // TV khởi động với ước lượng mạng thận trọng; chỉ nâng chất lượng khi đủ ổn định.
                     // Giảm việc nhảy level liên tục gây nháy trên một số Android TV/Xiaomi TV.
-                    abrEwmaFastLive: __tvIsAndroidTv() ? 8 : 3,
-                    abrEwmaSlowLive: __tvIsAndroidTv() ? 20 : 6,
+                    abrEwmaFastLive: __tvIsAndroidTv() ? 12 : 3,
+                    abrEwmaSlowLive: __tvIsAndroidTv() ? 30 : 6,
                     abrBandWidthFactor: __tvIsAndroidTv()
                         ? 0.72
                         : (tv365AdaptiveProfile().lowDevice ? 0.70 : 0.90),
                     abrBandWidthUpFactor: __tvIsAndroidTv()
-                        ? 0.45
+                        ? 0.35
                         : (tv365AdaptiveProfile().lowDevice ? 0.55 : 0.80),
                     abrEwmaDefaultEstimate: __tvIsAndroidTv()
                         ? 2200000
@@ -3296,8 +3296,17 @@ font-weight:700;
 
         // Chỉ tải EPG mặc định, không tự động tải danh sách kênh
         window.addEventListener('DOMContentLoaded', () => {
+    // V7.5: khởi tạo bộ bắt phím TV ngay khi DOM sẵn sàng.
+    // Không chờ playlist/EPG/render xong mới nhận remote.
+    if (__tvIsAndroidTv()) {
+        try {
+            window.TV365_DPAD_INIT?.();
+            window.TV365_RESET_TV_FOCUS?.();
+        } catch (_) {}
+    }
+
     // TV: ưu tiên tải danh sách + remote trước. EPG tải nền sau.
-    setTimeout(() => fetchEPG(), __tvIsAndroidTv() ? 5000 : 800);
+    setTimeout(() => fetchEPG(), __tvIsAndroidTv() ? 12000 : 800);
 });
 
 let tv365StartupLoading = false;
@@ -3700,6 +3709,49 @@ window.TV365_RESET_TV_FOCUS = function () {
 // ================= END TV365 DPAD V8 =================
 </script>
 
+
+<script>
+// === TV365 V7.5 EARLY TV REMOTE ===
+// Nhận phím DPAD ngay từ lúc trang vừa mở; nếu danh sách chưa render thì giữ phím cuối,
+// phát lại ngay khi item kênh đầu tiên xuất hiện.
+(function () {
+    if (!__tvIsAndroidTv()) return;
+
+    let pendingKey = 0;
+    let pendingAt = 0;
+
+    document.addEventListener('keydown', function (e) {
+        const code = e.keyCode || e.which || 0;
+        if (![19, 20, 21, 22, 23, 66].includes(code)) return;
+
+        if (!document.querySelector('.channel-item')) {
+            pendingKey = code;
+            pendingAt = Date.now();
+        }
+    }, true);
+
+    const observer = new MutationObserver(function () {
+        if (!pendingKey || Date.now() - pendingAt > 8000) return;
+        if (!document.querySelector('.channel-item')) return;
+
+        const code = pendingKey;
+        pendingKey = 0;
+
+        requestAnimationFrame(function () {
+            window.TV365_DPAD_INIT?.();
+            window.TV365_RESET_TV_FOCUS?.();
+            setTimeout(function () {
+                window.TV365_DPAD_KEY?.(code);
+            }, 30);
+        });
+    });
+
+    observer.observe(document.documentElement, {
+        childList: true,
+        subtree: true
+    });
+})();
+</script>
 
 <script>
 // === TV365 TV CHANNEL +/- V6 ===
