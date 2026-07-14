@@ -1,5 +1,5 @@
 (async function () {
-    // Không hiển thị trên Android TV / TV Box
+
     const ua = navigator.userAgent.toLowerCase();
     const isTV =
         ua.includes("tv") ||
@@ -10,28 +10,33 @@
     if (isTV) return;
 
     try {
+
         const res = await fetch("config/config.json");
         const cfg = await res.json();
 
-        const box = document.createElement("div");
-        box.id = "tv365-support";
+        const contactBtn = document.getElementById("contactBtn");
+        const groupBtn = document.getElementById("groupBtn");
 
-        box.innerHTML = `
-            <button id="tv365-contact">📞 Liên Hệ</button>
-            <button id="tv365-group">👥 Nhóm trò chuyện</button>
-        `;
+        if (!contactBtn || !groupBtn) return;
 
-        document.body.prepend(box);
+        contactBtn.textContent = "📞 " + cfg.contact.title;
+        groupBtn.textContent = "👥 " + cfg.group.title;
 
-        document
-            .getElementById("tv365-contact")
-            .onclick = () => window.open(cfg.support.url, "_blank");
+        function openLink(url){
 
-        document
-            .getElementById("tv365-group")
-            .onclick = () => window.open(cfg.community.url, "_blank");
+            if(!url) return;
 
-    } catch (e) {
-        console.log("TV365 Support:", e);
+            window.open(url,"_blank");
+
+        }
+
+        contactBtn.onclick = ()=>openLink(cfg.contact.url);
+        groupBtn.onclick = ()=>openLink(cfg.group.url);
+
+    } catch(e){
+
+        console.log(e);
+
     }
+
 })();
