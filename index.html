@@ -1,20 +1,19 @@
 <!DOCTYPE html>
+
 <html lang="vi">
-
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval' data: blob:; connect-src *; media-src * blob: data:; img-src * data:;">
-    <title>TV365 VIP</title>
-    <link rel="icon" href="TV.png" type="image/png">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.17/dist/hls.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.7.11/shaka-player.compiled.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/mpegts.js@1.7.3/dist/mpegts.min.js"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <link rel="icon" type="image/png" href="favicon.png">
-
-    <style>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta content="default-src * 'unsafe-inline' 'unsafe-eval' data: blob:; connect-src *; media-src * blob: data:; img-src * data:;" http-equiv="Content-Security-Policy"/>
+<title>TV365 VIP</title>
+<link href="TV.png" rel="icon" type="image/png"/>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.17/dist/hls.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.7.11/shaka-player.compiled.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mpegts.js@1.7.3/dist/mpegts.min.js"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
+<link href="favicon.png" rel="icon" type="image/png"/>
+<style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
         :root {
@@ -923,7 +922,6 @@ font-weight:700;
         }
 
 </style>
-
 <style>
 .tv365-notice{
 position:relative;overflow:hidden;border-radius:12px;padding:10px 12px;
@@ -938,349 +936,284 @@ content:"";position:absolute;inset:2px;background:#091126;border-radius:10px}
 .tv365-notice span{position:relative;z-index:2}
 @keyframes tv365NoticeSpin{to{transform:rotate(360deg)}}
 </style>
-
-</head>
-
+<style>
+#tv365-support{display:none}
+body:not(.tv365-tv-mode) #tv365-support{
+display:flex;flex-direction:column;gap:8px;margin:10px 0}
+.tv365-support-btn{
+display:block;padding:10px 12px;border-radius:10px;
+background:#1f2a44;border:1px solid #f97316;color:#fff;
+text-decoration:none;font-weight:700;text-align:center}
+</style></head>
 <body class="selection:bg-orange-500/30" onload="startTV365()">
-    <div id="toast-container"></div>
-
-    <div class="flex flex-col landscape:flex-row h-screen w-screen p-3 gap-3 overflow-hidden box-border">
-
-        <!-- SIDEBAR -->
-        <aside id="sidebar"
-            class="order-2 landscape:order-1 flex-1 landscape:flex-none w-full landscape:w-[280px] lg:w-[320px] glass-panel rounded-3xl flex flex-col overflow-hidden transition-all duration-300 relative">
-            <!-- Sidebar Header -->
-            <div class="p-4 border-b border-white/5 shrink-0 bg-white/[0.02]">
-                <div class="flex items-center justify-between mb-4">
-                    <div class="flex items-center gap-2.5">
-                        <div class="w-10 h-10 rounded-xl flex items-center justify-center overflow-hidden shrink-0">
-    <img src="./TV.png?v=2" alt="TV365 VIP" class="w-full h-full object-contain">
+<div id="toast-container"></div>
+<div class="flex flex-col landscape:flex-row h-screen w-screen p-3 gap-3 overflow-hidden box-border">
+<!-- SIDEBAR -->
+<aside class="order-2 landscape:order-1 flex-1 landscape:flex-none w-full landscape:w-[280px] lg:w-[320px] glass-panel rounded-3xl flex flex-col overflow-hidden transition-all duration-300 relative" id="sidebar">
+<!-- Sidebar Header -->
+<div class="p-4 border-b border-white/5 shrink-0 bg-white/[0.02]">
+<div class="flex items-center justify-between mb-4">
+<div class="flex items-center gap-2.5">
+<div class="w-10 h-10 rounded-xl flex items-center justify-center overflow-hidden shrink-0">
+<img alt="TV365 VIP" class="w-full h-full object-contain" src="./TV.png?v=2"/>
 </div>
-                        <div>
-                            <h1 class="font-bold text-sm tracking-tight text-white leading-none">
+<div>
+<h1 class="font-bold text-sm tracking-tight text-white leading-none">
                                 TV365 <span class="text-orange-300"> VIP</span>
-                            </h1>
-                            <span class="text-[9px] text-muted font-medium uppercase tracking-[0.1em] mt-1 block">
+</h1>
+<span class="text-[9px] text-muted font-medium uppercase tracking-[0.1em] mt-1 block">
                                 Truyền Hình
                                 Dành Cho Mọi Nhà
-                                  </h1>
-                            
-                        </div>
-                    </div>
-                    <div class="tv365-premium-wrap" aria-label="Premium">
-                        <div class="tv365-premium-hero" aria-hidden="true">
-                            <svg viewBox="0 0 150 120" xmlns="http://www.w3.org/2000/svg">
-                                <g class="tv365-hero-float">
-                                    <path class="tv365-hair" d="M35 29c3-17 31-23 43-6 7-3 13 5 8 11-3 4-7 4-10 3-2 15-31 17-39 3-8 1-10-8-2-11z"/>
-                                    <circle class="tv365-skin" cx="57" cy="38" r="18"/>
-                                    <path class="tv365-hair" d="M39 34c2-16 29-23 38-7-8-3-13 1-19-2-5 7-12 8-19 9z"/>
-                                    <circle cx="50" cy="38" r="1.8" fill="#241813"/>
-                                    <circle cx="64" cy="38" r="1.8" fill="#241813"/>
-                                    <path d="M51 46q6 6 12 0" fill="none" stroke="#a63f32" stroke-width="2" stroke-linecap="round"/>
-                                    <path class="tv365-shirt" d="M43 56q14-7 28 0l4 29H39z"/>
-                                    <path class="tv365-skin" d="M43 60q-11 7-14 18l6 2q5-9 13-13z"/>
-                                    <path class="tv365-skin" d="M69 60q11 3 17 11l-4 5q-8-7-15-8z"/>
-                                    <polygon points="57,62 60,68 67,69 62,74 64,81 57,77 50,81 52,74 47,69 54,68" fill="#ffeb3b"/>
-                                    <path d="M42 84h13v20H40zM59 84h13l2 20H60z" fill="#173a73"/>
-                                    <path d="M37 102h19v7H36q-4-3 1-7zM59 102h18q5 4 0 7H59z" fill="#f7f7f7"/>
-                                    <rect x="84" y="14" width="3.5" height="91" rx="1.5" fill="#e8edf5"/>
-                                    <g class="tv365-real-flag">
-                                        <path d="M87 16c18-8 35 9 59-1v39c-24 10-41-7-59 1z" fill="#da251d"/>
-                                        <polygon points="116,25 120,36 132,36 122,43 126,54 116,47 106,54 110,43 100,36 112,36" fill="#ffeb3b"/>
-                                    </g>
-                                </g>
-                            </svg>
-                        </div>
-                        <div class="tv365-premium-sparks" aria-hidden="true">
-                            <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
-                        </div>
-                        <div class="tv365-premium-badge">
-                            <span>Premium</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="tv365-notice"><span>KHI MỞ PHẦN MỀM VUI LÒNG CHỜ 3 GIÂY RỒI HÃY BẤM CHỌN KÊNH</span></div>
+                                  
+</span></div>
+</div>
+<div aria-label="Premium" class="tv365-premium-wrap">
+<div aria-hidden="true" class="tv365-premium-hero">
+<svg viewbox="0 0 150 120" xmlns="http://www.w3.org/2000/svg">
+<g class="tv365-hero-float">
+<path class="tv365-hair" d="M35 29c3-17 31-23 43-6 7-3 13 5 8 11-3 4-7 4-10 3-2 15-31 17-39 3-8 1-10-8-2-11z"></path>
+<circle class="tv365-skin" cx="57" cy="38" r="18"></circle>
+<path class="tv365-hair" d="M39 34c2-16 29-23 38-7-8-3-13 1-19-2-5 7-12 8-19 9z"></path>
+<circle cx="50" cy="38" fill="#241813" r="1.8"></circle>
+<circle cx="64" cy="38" fill="#241813" r="1.8"></circle>
+<path d="M51 46q6 6 12 0" fill="none" stroke="#a63f32" stroke-linecap="round" stroke-width="2"></path>
+<path class="tv365-shirt" d="M43 56q14-7 28 0l4 29H39z"></path>
+<path class="tv365-skin" d="M43 60q-11 7-14 18l6 2q5-9 13-13z"></path>
+<path class="tv365-skin" d="M69 60q11 3 17 11l-4 5q-8-7-15-8z"></path>
+<polygon fill="#ffeb3b" points="57,62 60,68 67,69 62,74 64,81 57,77 50,81 52,74 47,69 54,68"></polygon>
+<path d="M42 84h13v20H40zM59 84h13l2 20H60z" fill="#173a73"></path>
+<path d="M37 102h19v7H36q-4-3 1-7zM59 102h18q5 4 0 7H59z" fill="#f7f7f7"></path>
+<rect fill="#e8edf5" height="91" rx="1.5" width="3.5" x="84" y="14"></rect>
+<g class="tv365-real-flag">
+<path d="M87 16c18-8 35 9 59-1v39c-24 10-41-7-59 1z" fill="#da251d"></path>
+<polygon fill="#ffeb3b" points="116,25 120,36 132,36 122,43 126,54 116,47 106,54 110,43 100,36 112,36"></polygon>
+</g>
+</g>
+</svg>
+</div>
+<div aria-hidden="true" class="tv365-premium-sparks">
+<i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+</div>
+<div class="tv365-premium-badge">
+<span>Premium</span>
+</div>
+</div>
+</div>
+<div class="tv365-notice"><span>KHI MỞ PHẦN MỀM VUI LÒNG CHỜ 3 GIÂY RỒI HÃY BẤM CHỌN KÊNH</span></div><div id="tv365-support">
+<a class="tv365-support-btn" href="#" id="contactBtn">📞 Liên hệ Admin</a>
+<a class="tv365-support-btn" href="#" id="groupBtn">👥 Nhóm trò chuyện</a>
+</div>
 <div class="relative group flex items-center">
-                    <i data-lucide="search"
-                        class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted group-focus-within:text-orange-300 transition-colors pointer-events-none z-10"></i>
-                    <input type="text" id="search-input" placeholder="Tìm kiếm kênh..."
-                        class="w-full pl-10 pr-9 py-2 bg-black/40 border border-white/5 rounded-2xl text-xs text-white focus:outline-none focus:border-orange-500/40 transition-all placeholder-white/30"
-                        oninput="filterChannels()">
-                    <button id="clear-search-btn"
-                        class="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white hidden focus:outline-none transition-colors z-10"
-                        onclick="const inp = document.getElementById('search-input'); inp.value=''; inp.focus(); filterChannels();"
-                        title="Xóa tìm kiếm">
-                        <i data-lucide="x" class="w-4 h-4"></i>
-                    </button>
-                </div>
-            </div>
-
-            <!-- List Space -->
-            <div class="flex-1 overflow-hidden relative">
-                <ul id="channel-list" class="h-full overflow-y-auto p-2 space-y-1 custom-scrollbar">
-                    <!-- Empty State -->
-                    <div id="empty-state"
-                        class="h-full flex flex-col items-center justify-center text-center p-6 opacity-40">
-                        <i data-lucide="layout-list" class="w-12 h-12 mb-4"></i>
-                        <h3 class="font-medium text-sm">Chưa có kênh nào</h3>
-                        <p class="text-[11px] mt-1">Nhấn dấu cộng để thêm playlist của bạn</p>
-                    </div>
-                </ul>
-            </div>
-
-            <!-- Sidebar Footer -->
-            <div class="p-3 bg-black/40 border-t border-white/5 flex items-center justify-between shrink-0">
-                <div class="flex items-center gap-2">
-                    <div class="w-1.5 h-1.5 rounded-full bg-orange-500 shadow-[0_0_8px_var(--accent)]"></div>
-                    <span id="channel-count" class="text-[10px] text-muted font-semibold uppercase tracking-wider">
+<i class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted group-focus-within:text-orange-300 transition-colors pointer-events-none z-10" data-lucide="search"></i>
+<input class="w-full pl-10 pr-9 py-2 bg-black/40 border border-white/5 rounded-2xl text-xs text-white focus:outline-none focus:border-orange-500/40 transition-all placeholder-white/30" id="search-input" oninput="filterChannels()" placeholder="Tìm kiếm kênh..." type="text"/>
+<button class="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white hidden focus:outline-none transition-colors z-10" id="clear-search-btn" onclick="const inp = document.getElementById('search-input'); inp.value=''; inp.focus(); filterChannels();" title="Xóa tìm kiếm">
+<i class="w-4 h-4" data-lucide="x"></i>
+</button>
+</div>
+</div>
+<!-- List Space -->
+<div class="flex-1 overflow-hidden relative">
+<ul class="h-full overflow-y-auto p-2 space-y-1 custom-scrollbar" id="channel-list">
+<!-- Empty State -->
+<div class="h-full flex flex-col items-center justify-center text-center p-6 opacity-40" id="empty-state">
+<i class="w-12 h-12 mb-4" data-lucide="layout-list"></i>
+<h3 class="font-medium text-sm">Chưa có kênh nào</h3>
+<p class="text-[11px] mt-1">Nhấn dấu cộng để thêm playlist của bạn</p>
+</div>
+</ul>
+</div>
+<!-- Sidebar Footer -->
+<div class="p-3 bg-black/40 border-t border-white/5 flex items-center justify-between shrink-0">
+<div class="flex items-center gap-2">
+<div class="w-1.5 h-1.5 rounded-full bg-orange-500 shadow-[0_0_8px_var(--accent)]"></div>
+<span class="text-[10px] text-muted font-semibold uppercase tracking-wider" id="channel-count">
                         0
                         Kênh
                     </span>
-                </div>
-                <button onclick="clearList()"
-                    class="text-[10px] text-muted hover:text-red-400 transition-colors uppercase tracking-wider font-bold">
+</div>
+<button class="text-[10px] text-muted hover:text-red-400 transition-colors uppercase tracking-wider font-bold" onclick="clearList()">
                     Dọn
                     dẹp
                 </button>
-            </div>
-        </aside>
-
-        <!-- MAIN PLAYER AREA WRAPPER -->
-        <div
-            class="order-1 landscape:order-2 flex-none landscape:flex-1 flex flex-col gap-3 landscape:gap-4 h-auto landscape:h-full overflow-hidden min-w-0 landscape:min-w-[320px]">
-            <!-- Video Container -->
-            <main
-                class="w-full aspect-video landscape:aspect-auto landscape:flex-1 glass-panel rounded-xl landscape:rounded-none overflow-hidden relative shadow-2xl shrink-0">
-                <div class="w-full h-full bg-black relative video-container overflow-hidden">
-                    <video id="video-player" class="w-full h-full object-contain" playsinline controls></video>
-
-                    <!-- Player Overlay (Intro) -->
-                    <div id="player-overlay"
-                        class="absolute inset-0 flex flex-col items-center justify-center bg-black transition-opacity duration-700 pointer-events-none">
-                        <div class="w-20 h-20 rounded-full bg-orange-500/5 flex items-center justify-center relative">
-                            <div class="absolute inset-0 bg-orange-500/10 blur-3xl animate-pulse"></div>
-                            <i data-lucide="play"
-                                class="w-8 h-8 text-orange-500 fill-indigo-500 relative z-10 ml-1"></i>
-                        </div>
-                    </div>
-
-                    <!-- Audio/Radio Visualizer -->
-                    <div id="audio-visualizer"
-                        class="absolute inset-0 flex flex-col items-center justify-center bg-transparent hidden z-0 pointer-events-none p-6 w-full h-full box-border">
-                        <div
-                            class="flex flex-col items-center justify-center transform scale-75 sm:scale-90 transition-all duration-500 pb-24">
-                            <div
-                                class="relative w-24 h-24 sm:w-32 flex items-center justify-center shrink-0 mb-4 sm:mb-6">
-                                <div class="absolute inset-0 bg-orange-500 rounded-full opacity-20 animate-ping"
-                                    style="animation-duration: 2.5s;"></div>
-                                <div class="absolute inset-4 bg-orange-500 rounded-full opacity-30 animate-ping"
-                                    style="animation-duration: 2s; animation-delay: 0.5s;"></div>
-                                <div
-                                    class="relative z-10 bg-[#111] w-16 h-16 sm:w-24 sm:h-24 rounded-full border border-orange-500/30 shadow-[0_0_30px_rgba(249,115,22,0.3)] flex items-center justify-center overflow-hidden">
-                                    <i id="audio-visualizer-icon" data-lucide="radio"
-                                        class="w-8 h-8 sm:w-10 sm:h-10 text-orange-300"></i>
-                                </div>
-                            </div>
-
-                            <!-- Channel Logo (Just above the title, no background/border) -->
-                            <img id="audio-visualizer-logo" src=""
-                                class="w-full max-w-[200px] sm:max-w-xs aspect-video object-contain mb-4 hidden drop-shadow-2xl rounded-2xl shrink-0">
-
-                            <h3 id="audio-visualizer-title"
-                                class="text-white text-base sm:text-lg font-semibold tracking-wide mb-1 text-center w-full truncate px-4">
+</div>
+</aside>
+<!-- MAIN PLAYER AREA WRAPPER -->
+<div class="order-1 landscape:order-2 flex-none landscape:flex-1 flex flex-col gap-3 landscape:gap-4 h-auto landscape:h-full overflow-hidden min-w-0 landscape:min-w-[320px]">
+<!-- Video Container -->
+<main class="w-full aspect-video landscape:aspect-auto landscape:flex-1 glass-panel rounded-xl landscape:rounded-none overflow-hidden relative shadow-2xl shrink-0">
+<div class="w-full h-full bg-black relative video-container overflow-hidden">
+<video class="w-full h-full object-contain" controls="" id="video-player" playsinline=""></video>
+<!-- Player Overlay (Intro) -->
+<div class="absolute inset-0 flex flex-col items-center justify-center bg-black transition-opacity duration-700 pointer-events-none" id="player-overlay">
+<div class="w-20 h-20 rounded-full bg-orange-500/5 flex items-center justify-center relative">
+<div class="absolute inset-0 bg-orange-500/10 blur-3xl animate-pulse"></div>
+<i class="w-8 h-8 text-orange-500 fill-indigo-500 relative z-10 ml-1" data-lucide="play"></i>
+</div>
+</div>
+<!-- Audio/Radio Visualizer -->
+<div class="absolute inset-0 flex flex-col items-center justify-center bg-transparent hidden z-0 pointer-events-none p-6 w-full h-full box-border" id="audio-visualizer">
+<div class="flex flex-col items-center justify-center transform scale-75 sm:scale-90 transition-all duration-500 pb-24">
+<div class="relative w-24 h-24 sm:w-32 flex items-center justify-center shrink-0 mb-4 sm:mb-6">
+<div class="absolute inset-0 bg-orange-500 rounded-full opacity-20 animate-ping" style="animation-duration: 2.5s;"></div>
+<div class="absolute inset-4 bg-orange-500 rounded-full opacity-30 animate-ping" style="animation-duration: 2s; animation-delay: 0.5s;"></div>
+<div class="relative z-10 bg-[#111] w-16 h-16 sm:w-24 sm:h-24 rounded-full border border-orange-500/30 shadow-[0_0_30px_rgba(249,115,22,0.3)] flex items-center justify-center overflow-hidden">
+<i class="w-8 h-8 sm:w-10 sm:h-10 text-orange-300" data-lucide="radio" id="audio-visualizer-icon"></i>
+</div>
+</div>
+<!-- Channel Logo (Just above the title, no background/border) -->
+<img class="w-full max-w-[200px] sm:max-w-xs aspect-video object-contain mb-4 hidden drop-shadow-2xl rounded-2xl shrink-0" id="audio-visualizer-logo" src=""/>
+<h3 class="text-white text-base sm:text-lg font-semibold tracking-wide mb-1 text-center w-full truncate px-4" id="audio-visualizer-title">
                                 Radio Stream</h3>
-                            <p id="audio-visualizer-desc"
-                                class="text-orange-300/80 text-[10px] sm:text-xs uppercase tracking-[0.2em] mb-4 sm:mb-8 font-medium text-center w-full truncate px-4">
+<p class="text-orange-300/80 text-[10px] sm:text-xs uppercase tracking-[0.2em] mb-4 sm:mb-8 font-medium text-center w-full truncate px-4" id="audio-visualizer-desc">
                                 Đang phát âm thanh</p>
-                            <div class="flex gap-1.5 h-8 sm:h-10 items-end shrink-0">
-                                <div class="audio-bar" style="height: 40%; animation-delay: 0.1s;"></div>
-                                <div class="audio-bar" style="height: 80%; animation-delay: 0.3s;"></div>
-                                <div class="audio-bar" style="height: 60%; animation-delay: 0.2s;"></div>
-                                <div class="audio-bar" style="height: 100%; animation-delay: 0.5s;"></div>
-                                <div class="audio-bar" style="height: 30%; animation-delay: 0.4s;"></div>
-                                <div class="audio-bar" style="height: 70%; animation-delay: 0.6s;"></div>
-                                <div class="audio-bar" style="height: 50%; animation-delay: 0.3s;"></div>
-                                <div class="audio-bar" style="height: 90%; animation-delay: 0.7s;"></div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Floating Controls: Stop + Quality + Fullscreen -->
-                    <div class="player-float-controls" id="float-controls">
-                        <button class="ctrl-btn tooltip" data-tip="Dừng phát" onclick="stopChannel()">
-                            <i data-lucide="square" class="w-3.5 h-3.5 fill-current"></i>
-                        </button>
-                        <span id="real-quality-badge"
-                            class="quality-select"
-                            style="pointer-events:none; min-width:64px; text-align:center;">
+<div class="flex gap-1.5 h-8 sm:h-10 items-end shrink-0">
+<div class="audio-bar" style="height: 40%; animation-delay: 0.1s;"></div>
+<div class="audio-bar" style="height: 80%; animation-delay: 0.3s;"></div>
+<div class="audio-bar" style="height: 60%; animation-delay: 0.2s;"></div>
+<div class="audio-bar" style="height: 100%; animation-delay: 0.5s;"></div>
+<div class="audio-bar" style="height: 30%; animation-delay: 0.4s;"></div>
+<div class="audio-bar" style="height: 70%; animation-delay: 0.6s;"></div>
+<div class="audio-bar" style="height: 50%; animation-delay: 0.3s;"></div>
+<div class="audio-bar" style="height: 90%; animation-delay: 0.7s;"></div>
+</div>
+</div>
+</div>
+<!-- Floating Controls: Stop + Quality + Fullscreen -->
+<div class="player-float-controls" id="float-controls">
+<button class="ctrl-btn tooltip" data-tip="Dừng phát" onclick="stopChannel()">
+<i class="w-3.5 h-3.5 fill-current" data-lucide="square"></i>
+</button>
+<span class="quality-select" id="real-quality-badge" style="pointer-events:none; min-width:64px; text-align:center;">
                             --p
                         </span>
-                        <select id="quality-selector" class="quality-select hidden" title="Chọn độ phân giải">
-                            <option value="-1">Auto</option>
-                        </select>
-                        <button class="ctrl-btn tooltip" data-tip="Toàn màn hình" onclick="toggleFullscreen()"
-                            id="fullscreen-btn">
-                            <i data-lucide="maximize" class="w-3.5 h-3.5"></i>
-                        </button>
-                    </div>
-
-
-
-                    <!-- Loading Spinner -->
-                    <div id="loading-overlay"
-                        class="absolute inset-0 flex flex-col items-center justify-center bg-black/60 backdrop-blur-md z-20 hidden text-white">
-                        <div
-                            class="w-8 h-8 border-2 border-orange-500/30 border-t-indigo-500 rounded-full animate-spin">
-                        </div>
-                        <p id="resolve-status" class="hidden text-[10px] text-orange-300/80 mt-3 flex items-center gap-1.5">
-                            <span class="inline-block w-1.5 h-1.5 bg-indigo-400 rounded-full animate-pulse"></span>
+<select class="quality-select hidden" id="quality-selector" title="Chọn độ phân giải">
+<option value="-1">Auto</option>
+</select>
+<button class="ctrl-btn tooltip" data-tip="Toàn màn hình" id="fullscreen-btn" onclick="toggleFullscreen()">
+<i class="w-3.5 h-3.5" data-lucide="maximize"></i>
+</button>
+</div>
+<!-- Loading Spinner -->
+<div class="absolute inset-0 flex flex-col items-center justify-center bg-black/60 backdrop-blur-md z-20 hidden text-white" id="loading-overlay">
+<div class="w-8 h-8 border-2 border-orange-500/30 border-t-indigo-500 rounded-full animate-spin">
+</div>
+<p class="hidden text-[10px] text-orange-300/80 mt-3 flex items-center gap-1.5" id="resolve-status">
+<span class="inline-block w-1.5 h-1.5 bg-indigo-400 rounded-full animate-pulse"></span>
                             Đang dò link stream...
                         </p>
-                    </div>
-
-                    <!-- EPG Side Panel (Inside Main) -->
-                    <div id="epg-panel"
-                        class="absolute top-0 left-0 w-80 h-full bg-black/85 backdrop-blur-xl border-r border-white/10 flex flex-col pointer-events-auto z-40">
-                        <div class="p-4 border-b border-white/5 flex items-center justify-between bg-black/20">
-                            <h2 class="text-sm font-bold text-white flex items-center gap-2" title="Lịch Phát Sóng">
-                                <i data-lucide="calendar-days" class="w-4 h-4 text-orange-300 shrink-0"></i>
-                                <span id="epg-title" class="truncate max-w-[180px]">Lịch Phát Sóng</span>
-                            </h2>
-                            <div class="flex items-center gap-1">
-                                <button onclick="fetchEPG()"
-                                    class="p-1.5 hover:bg-white/10 rounded-lg transition-colors tooltip"
-                                    data-tip="Tải lại lịch">
-                                    <i data-lucide="refresh-cw" class="w-4 h-4 text-muted"></i>
-                                </button>
-                                <button onclick="toggleEPG()"
-                                    class="p-1.5 hover:bg-white/10 rounded-lg transition-colors">
-                                    <i data-lucide="x" class="w-4 h-4 text-muted"></i>
-                                </button>
-                            </div>
-                        </div>
-                        <div id="epg-content" class="flex-1 overflow-y-auto p-3 custom-scrollbar">
-                            <div class="h-full flex flex-col items-center justify-center text-center opacity-40 p-6">
-                                <i data-lucide="info" class="w-8 h-8 mb-3"></i>
-                                <p class="text-xs">Chọn kênh để xem lịch</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- EPG Toggle Button (Floating) -->
-                    <button id="epg-toggle-btn" onclick="toggleEPG()"
-                        class="absolute top-4 left-4 z-50 w-10 h-10 rounded-full bg-black/60 backdrop-blur-md border border-white/10 flex items-center justify-center text-white/70 hover:text-white hover:border-orange-500/50 hover:bg-orange-500/20 shadow-xl hidden">
-                        <i data-lucide="calendar" class="w-5 h-5"></i>
-                    </button>
-                </div>
-            </main>
-
-            <!-- Category Tabs (Separate Box) -->
-            <div class="glass-panel p-3 rounded-2xl shrink-0">
-                <div id="category-tabs" class="flex gap-2 overflow-x-auto pb-1 custom-scrollbar no-scrollbar">
-                    <!-- Tabs rendered by JS -->
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal Thêm Kênh / Playlist (Popup Dialog) -->
-    <div id="add-dialog"
-        class="absolute inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-300">
-        <div class="bg-[#111111] border border-white/10 rounded-2xl p-5 w-full max-w-sm flex flex-col gap-4 shadow-2xl transform scale-95 transition-transform duration-300"
-            id="add-dialog-content">
-
-            <div class="flex items-center justify-between border-b border-white/5 pb-3">
-                <h2 class="text-white font-semibold text-sm flex items-center gap-2">
-                    <i data-lucide="list-plus" class="w-4 h-4 text-orange-300"></i>
+</div>
+<!-- EPG Side Panel (Inside Main) -->
+<div class="absolute top-0 left-0 w-80 h-full bg-black/85 backdrop-blur-xl border-r border-white/10 flex flex-col pointer-events-auto z-40" id="epg-panel">
+<div class="p-4 border-b border-white/5 flex items-center justify-between bg-black/20">
+<h2 class="text-sm font-bold text-white flex items-center gap-2" title="Lịch Phát Sóng">
+<i class="w-4 h-4 text-orange-300 shrink-0" data-lucide="calendar-days"></i>
+<span class="truncate max-w-[180px]" id="epg-title">Lịch Phát Sóng</span>
+</h2>
+<div class="flex items-center gap-1">
+<button class="p-1.5 hover:bg-white/10 rounded-lg transition-colors tooltip" data-tip="Tải lại lịch" onclick="fetchEPG()">
+<i class="w-4 h-4 text-muted" data-lucide="refresh-cw"></i>
+</button>
+<button class="p-1.5 hover:bg-white/10 rounded-lg transition-colors" onclick="toggleEPG()">
+<i class="w-4 h-4 text-muted" data-lucide="x"></i>
+</button>
+</div>
+</div>
+<div class="flex-1 overflow-y-auto p-3 custom-scrollbar" id="epg-content">
+<div class="h-full flex flex-col items-center justify-center text-center opacity-40 p-6">
+<i class="w-8 h-8 mb-3" data-lucide="info"></i>
+<p class="text-xs">Chọn kênh để xem lịch</p>
+</div>
+</div>
+</div>
+<!-- EPG Toggle Button (Floating) -->
+<button class="absolute top-4 left-4 z-50 w-10 h-10 rounded-full bg-black/60 backdrop-blur-md border border-white/10 flex items-center justify-center text-white/70 hover:text-white hover:border-orange-500/50 hover:bg-orange-500/20 shadow-xl hidden" id="epg-toggle-btn" onclick="toggleEPG()">
+<i class="w-5 h-5" data-lucide="calendar"></i>
+</button>
+</div>
+</main>
+<!-- Category Tabs (Separate Box) -->
+<div class="glass-panel p-3 rounded-2xl shrink-0">
+<div class="flex gap-2 overflow-x-auto pb-1 custom-scrollbar no-scrollbar" id="category-tabs">
+<!-- Tabs rendered by JS -->
+</div>
+</div>
+</div>
+</div>
+<!-- Modal Thêm Kênh / Playlist (Popup Dialog) -->
+<div class="absolute inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-300" id="add-dialog">
+<div class="bg-[#111111] border border-white/10 rounded-2xl p-5 w-full max-w-sm flex flex-col gap-4 shadow-2xl transform scale-95 transition-transform duration-300" id="add-dialog-content">
+<div class="flex items-center justify-between border-b border-white/5 pb-3">
+<h2 class="text-white font-semibold text-sm flex items-center gap-2">
+<i class="w-4 h-4 text-orange-300" data-lucide="list-plus"></i>
                     Thêm Nguồn Phát
                 </h2>
-                <button onclick="closeAddDialog()"
-                    class="text-[#888888] hover:text-white transition-colors p-1 rounded-md hover:bg-white/5">
-                    <i data-lucide="x" class="w-4 h-4"></i>
-                </button>
-            </div>
-
-            <!-- Nguồn có sẵn (Quick Picks) -->
-            <div class="flex flex-col gap-2 mt-1">
-                <label class="text-[#aaaaaa] text-xs font-medium px-1 flex items-center gap-1.5">
-                    <i data-lucide="zap" class="w-3.5 h-3.5 text-yellow-500 fill-yellow-500/20"></i> Nguồn phát nhanh
+<button class="text-[#888888] hover:text-white transition-colors p-1 rounded-md hover:bg-white/5" onclick="closeAddDialog()">
+<i class="w-4 h-4" data-lucide="x"></i>
+</button>
+</div>
+<!-- Nguồn có sẵn (Quick Picks) -->
+<div class="flex flex-col gap-2 mt-1">
+<label class="text-[#aaaaaa] text-xs font-medium px-1 flex items-center gap-1.5">
+<i class="w-3.5 h-3.5 text-yellow-500 fill-yellow-500/20" data-lucide="zap"></i> Nguồn phát nhanh
                 </label>
-                <div class="grid grid-cols-2 gap-2">
-                    <button onclick="loadPredefinedUrl('https://raw.githubusercontent.com/TV365-VN/TV365-DATA/main/error.m3u')"
-                        class="px-3 py-2.5 bg-[#1a1a1a] hover:bg-orange-500/10 border border-white/5 hover:border-orange-500/30 rounded-xl transition-all group flex items-center justify-center">
-                        <span class="text-[12px] font-bold text-white group-hover:text-orange-300 transition-colors">
+<div class="grid grid-cols-2 gap-2">
+<button class="px-3 py-2.5 bg-[#1a1a1a] hover:bg-orange-500/10 border border-white/5 hover:border-orange-500/30 rounded-xl transition-all group flex items-center justify-center" onclick="loadPredefinedUrl('https://raw.githubusercontent.com/TV365-VN/TV365-DATA/main/error.m3u')">
+<span class="text-[12px] font-bold text-white group-hover:text-orange-300 transition-colors">
                             TV
                         </span>
-                    </button>
-                    <button onclick="loadPredefinedUrl('https://tinyurl.com/HoiQuanClick/')"
-                        class="px-3 py-2.5 bg-[#1a1a1a] hover:bg-red-500/10 border border-white/5 hover:border-red-500/30 rounded-xl transition-all group flex items-center justify-center">
-                        <span class="text-[12px] font-bold text-white group-hover:text-red-400 transition-colors">
+</button>
+<button class="px-3 py-2.5 bg-[#1a1a1a] hover:bg-red-500/10 border border-white/5 hover:border-red-500/30 rounded-xl transition-all group flex items-center justify-center" onclick="loadPredefinedUrl('https://tinyurl.com/HoiQuanClick/')">
+<span class="text-[12px] font-bold text-white group-hover:text-red-400 transition-colors">
                             Hội
                             Quán
                         </span>
-                    </button>
-                    <button onclick="loadPredefinedUrl('https://vpsttt.vietanhtv.top/tv/')"
-                        class="px-3 py-2.5 bg-[#1a1a1a] hover:bg-emerald-500/10 border border-white/5 hover:border-emerald-500/30 rounded-xl transition-all group flex items-center justify-center">
-                        <span class="text-[12px] font-bold text-white group-hover:text-emerald-400 transition-colors">
+</button>
+<button class="px-3 py-2.5 bg-[#1a1a1a] hover:bg-emerald-500/10 border border-white/5 hover:border-emerald-500/30 rounded-xl transition-all group flex items-center justify-center" onclick="loadPredefinedUrl('https://vpsttt.vietanhtv.top/tv/')">
+<span class="text-[12px] font-bold text-white group-hover:text-emerald-400 transition-colors">
                             Bóng
                             Đá
                         </span>
-                    </button>
-                </div>
-            </div>
-
-            <div class="relative flex items-center justify-center my-1">
-                <div class="absolute inset-x-0 h-[1px] bg-white/5"></div>
-                <span class="relative bg-[#111111] px-2 text-[10px] text-[#666666] font-medium uppercase">
+</button>
+</div>
+</div>
+<div class="relative flex items-center justify-center my-1">
+<div class="absolute inset-x-0 h-[1px] bg-white/5"></div>
+<span class="relative bg-[#111111] px-2 text-[10px] text-[#666666] font-medium uppercase">
                     Tùy
                     Chỉnh
                 </span>
-            </div>
-
-            <!-- Input URL -->
-            <div class="flex flex-col gap-1.5">
-                <label class="text-[#888888] text-[11px] font-medium px-1">Nhập Liên kết URL thủ công</label>
-                <div class="relative flex w-full group">
-                    <div class="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none">
-                        <i data-lucide="link"
-                            class="w-3.5 h-3.5 text-[#666666] group-focus-within:text-orange-300 transition-colors"></i>
-                    </div>
-                    <input type="text" id="url-input" placeholder="https://domain.com/playlist"
-                        class="w-full pl-8 pr-16 py-2.5 bg-[#151515] border border-white/5 rounded-xl text-xs text-white focus:outline-none focus:bg-[#1a1a1a] focus:border-orange-500/50 transition-all placeholder-[#555555]">
-                    <button onclick="loadFromUrl(); closeAddDialog();"
-                        class="absolute right-1 top-1 bottom-1 bg-orange-500 hover:bg-orange-600 text-white px-3.5 rounded-lg text-[11px] font-medium transition-colors flex items-center shadow-sm">
+</div>
+<!-- Input URL -->
+<div class="flex flex-col gap-1.5">
+<label class="text-[#888888] text-[11px] font-medium px-1">Nhập Liên kết URL thủ công</label>
+<div class="relative flex w-full group">
+<div class="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none">
+<i class="w-3.5 h-3.5 text-[#666666] group-focus-within:text-orange-300 transition-colors" data-lucide="link"></i>
+</div>
+<input class="w-full pl-8 pr-16 py-2.5 bg-[#151515] border border-white/5 rounded-xl text-xs text-white focus:outline-none focus:bg-[#1a1a1a] focus:border-orange-500/50 transition-all placeholder-[#555555]" id="url-input" placeholder="https://domain.com/playlist" type="text"/>
+<button class="absolute right-1 top-1 bottom-1 bg-orange-500 hover:bg-orange-600 text-white px-3.5 rounded-lg text-[11px] font-medium transition-colors flex items-center shadow-sm" onclick="loadFromUrl(); closeAddDialog();">
                         TẢI
                     </button>
-                </div>
-            </div>
-
-            <div class="relative flex items-center justify-center my-1">
-                <div class="absolute inset-x-0 h-[1px] bg-white/5"></div>
-                <span class="relative bg-[#111111] px-2 text-[10px] text-[#666666] font-medium uppercase">Hoặc</span>
-            </div>
-
-            <!-- Nút Upload File Local -->
-            <div class="flex flex-col gap-1.5 mb-1">
-                <label class="text-[#888888] text-[11px] font-medium px-1">Mở File từ máy tính cục bộ</label>
-                <input type="file" id="file-upload" accept=".m3u,.m3u8,.json" class="hidden"
-                    onchange="handleFileUpload(event); closeAddDialog();">
-                <label for="file-upload"
-                    class="cursor-pointer flex items-center justify-center gap-2 bg-[#1a1a1a] hover:bg-[#222222] border border-white/10 text-white px-4 py-2.5 text-xs font-medium rounded-xl transition-all w-full group">
-                    <i data-lucide="folder-open"
-                        class="w-4 h-4 text-orange-300 group-hover:scale-110 transition-transform"></i>
-                    <span>Tải tệp từ máy (.m3u)</span>
-                </label>
-            </div>
+</div>
+</div>
+<div class="relative flex items-center justify-center my-1">
+<div class="absolute inset-x-0 h-[1px] bg-white/5"></div>
+<span class="relative bg-[#111111] px-2 text-[10px] text-[#666666] font-medium uppercase">Hoặc</span>
+</div>
+<!-- Nút Upload File Local -->
+<div class="flex flex-col gap-1.5 mb-1">
+<label class="text-[#888888] text-[11px] font-medium px-1">Mở File từ máy tính cục bộ</label>
+<input accept=".m3u,.m3u8,.json" class="hidden" id="file-upload" onchange="handleFileUpload(event); closeAddDialog();" type="file"/>
+<label class="cursor-pointer flex items-center justify-center gap-2 bg-[#1a1a1a] hover:bg-[#222222] border border-white/10 text-white px-4 py-2.5 text-xs font-medium rounded-xl transition-all w-full group" for="file-upload">
+<i class="w-4 h-4 text-orange-300 group-hover:scale-110 transition-transform" data-lucide="folder-open"></i>
+<span>Tải tệp từ máy (.m3u)</span>
+</label>
+</div>
+</div>
+</div>
 
 
-        </div>
-    </div>
-
-    </section>
-    </main>
-
-    <script>
+<script>
         // Khởi tạo icons
         lucide.createIcons();
         if (typeof shaka !== 'undefined') shaka.polyfill.installAll();
@@ -3876,10 +3809,6 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 </script>
-
-
-
-
 <script>
 function __tvIsAndroidTv() {
     return window.__TV365_REMOTE_ACTIVE__ === true ||
@@ -4213,8 +4142,6 @@ window.TV365_RESET_TV_FOCUS = function () {
 };
 // ================= END TV365 DPAD V8 =================
 </script>
-
-
 <script>
 // === TV365 TV CHANNEL +/- V6 ===
 // CH+, ChannelUp, PageUp: kênh kế tiếp
@@ -4288,8 +4215,6 @@ window.TV365_RESET_TV_FOCUS = function () {
     }, true);
 })();
 </script>
-
-
 <script>
 // === TV365 TV BACK SAFE FALLBACK ===
 // Chỉ bắt phím Back/Escape của trang web; không đụng DPAD hoặc CH+/CH-.
@@ -4327,45 +4252,33 @@ document.addEventListener('keydown', function (e) {
     }
 }, true);
 </script>
-
-
 <script>
-document.addEventListener("DOMContentLoaded", async () => {
-  const isTV = /Android TV|SMART-TV|SmartTV|AFT|BRAVIA|TV/i.test(navigator.userAgent);
-  if (isTV) return;
-
-  try {
-    const cfg = await fetch("config/config.json").then(r=>r.json());
-
-    const wrap = document.createElement("div");
-    wrap.style.position="fixed";
-    wrap.style.right="20px";
-    wrap.style.bottom="20px";
-    wrap.style.zIndex="99999";
-    wrap.style.display="flex";
-    wrap.style.gap="10px";
-
-    function btn(title,url,bg){
-      if(!url) return;
-      const a=document.createElement("a");
-      a.href=url;
-      a.target="_blank";
-      a.textContent=title;
-      a.style.cssText=`padding:10px 16px;border-radius:10px;color:#fff;text-decoration:none;font-weight:bold;background:${bg};box-shadow:0 2px 8px rgba(0,0,0,.35)`;
-      wrap.appendChild(a);
-    }
-
-    if(cfg.contact) btn(cfg.contact.title || "Liên hệ Admin", cfg.contact.url, "#0ea5e9");
-    if(cfg.group) btn(cfg.group.title || "Nhóm Telegram", cfg.group.url, "#22c55e");
-
-    document.body.appendChild(wrap);
-  } catch(e){
-    console.log("Không đọc được config.json",e);
-  }
-});
-</script>
-
-</body>
-
+(async()=>{
+const ua=navigator.userAgent;
+if(/Android TV|SMART-TV|BRAVIA|AFT|TV/i.test(ua)){document.body.classList.add('tv365-tv-mode');return;}
+let cfg={};
+try{cfg=await fetch('config/config.json').then(r=>r.json());}catch(e){}
+function appName(url){
+url=(url||'').toLowerCase();
+if(url.includes('zalo'))return 'Zalo';
+if(url.includes('telegram')||url.includes('t.me'))return 'Telegram';
+if(url.includes('m.me')||url.includes('facebook'))return 'Messenger';
+return 'ứng dụng';
+}
+function bind(id,obj){
+const el=document.getElementById(id);
+if(!el)return;
+if(!obj||obj.enabled===false||!obj.url){el.style.display='none';return;}
+el.textContent=(id==='contactBtn'?'📞 ':'👥 ')+(obj.title||'');
+el.onclick=(e)=>{
+e.preventDefault();
+const ok=confirm('Mở '+appName(obj.url)+'?\nNếu chưa cài '+appName(obj.url)+', hãy cài ứng dụng rồi thử lại.');
+if(ok) window.open(obj.url,'_blank');
+};
+}
+bind('contactBtn',cfg.contact);
+bind('groupBtn',cfg.group);
+document.getElementById('tv365-support').style.display='flex';
+})();
+</script></body>
 </html>
-
