@@ -1,17 +1,12 @@
-
 {
   "contact": {
+    "enabled": true,
     "title": "Liên hệ Admin",
     "url": "https://telegram.me/TV365_VIP"
   },
-
   "group": {
+    "enabled": true,
     "title": "Nhóm trò chuyện",
     "url": "https://telegram.me/+h4tVaArvW39iZWQ1"
-  },
-
-  "channel": {
-    "title": "",
-    "url": ""
   }
 }
