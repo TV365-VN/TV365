@@ -19,8 +19,13 @@
 
         if (!contactBtn || !groupBtn) return;
 
-        contactBtn.textContent = "📞 " + cfg.contact.title;
-        groupBtn.textContent = "👥 " + cfg.group.title;
+      if (cfg.contact && cfg.contact.title) {
+    contactBtn.textContent = cfg.contact.title;
+}
+
+if (cfg.group && cfg.group.title) {
+    groupBtn.textContent = cfg.group.title;
+}
 
         function openLink(url){
 
