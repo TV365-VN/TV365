@@ -3,6 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
+    <meta name="referrer" content="no-referrer">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval' data: blob:; connect-src *; media-src * blob: data:; img-src * data:;">
     <title>TV365 VIP</title>
@@ -3249,6 +3250,7 @@ content:"";position:absolute;inset:2px;background:#091126;border-radius:10px}
                 const tv365WeakVtvFastMode = tv365IsTvVtv(channel) && tv365IsWeakHdTv();
 
                 hlsInstance = new Hls({
+xhrSetup:function(xhr){xhr.withCredentials=false;try{xhr.setRequestHeader("Accept","*/*");}catch(e){}},
                     enableWorker: true,
                     lowLatencyMode: false,
                     autoStartLoad: true,
