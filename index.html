@@ -3251,7 +3251,7 @@ content:"";position:absolute;inset:2px;background:#091126;border-radius:10px}
 
                 hlsInstance = new Hls({
 xhrSetup:function(xhr){xhr.withCredentials=false;try{xhr.setRequestHeader("Accept","*/*");}catch(e){}},
-                    enableWorker: true,
+                    enableWorker: __tvIsAndroidTv() ? false : true,
                     lowLatencyMode: false,
                     autoStartLoad: true,
 
@@ -3260,13 +3260,13 @@ xhrSetup:function(xhr){xhr.withCredentials=false;try{xhr.setRequestHeader("Accep
                     capLevelToPlayerSize: true,
 
                     // Android TV yếu: buffer vừa phải để vào kênh nhanh hơn và giảm áp lực RAM.
-                    backBufferLength: __tvIsAndroidTv() ? 8 : 30,
-                    maxBufferLength: __tvIsAndroidTv() ? 12 : 24,
-                    maxMaxBufferLength: __tvIsAndroidTv() ? 20 : 45,
+                    backBufferLength: __tvIsAndroidTv() ? 4 : 30,
+                    maxBufferLength: __tvIsAndroidTv() ? 6 : 24,
+                    maxMaxBufferLength: __tvIsAndroidTv() ? 10 : 45,
                     maxBufferSize: __tvIsAndroidTv() ? 20 * 1000 * 1000 : 60 * 1000 * 1000,
 
-                    liveSyncDurationCount: __tvIsAndroidTv() ? 4 : 4,
-                    liveMaxLatencyDurationCount: __tvIsAndroidTv() ? 10 : 10,
+                    liveSyncDurationCount: __tvIsAndroidTv() ? 2 : 4,
+                    liveMaxLatencyDurationCount: __tvIsAndroidTv() ? 5 : 10,
 
                     maxBufferHole: 0.5,
                     highBufferWatchdogPeriod: 3,
@@ -3615,7 +3615,7 @@ xhrSetup:function(xhr){xhr.withCredentials=false;try{xhr.setRequestHeader("Accep
                     isLive: true,
                     url: resolvedUrl
                 }, {
-                    enableWorker: true,
+                    enableWorker: __tvIsAndroidTv() ? false : true,
                     liveBufferLatencyChasing: false,
                     liveBufferLatencyMaxLatency: 5,
                     liveBufferLatencyMinRemain: 1.0,
