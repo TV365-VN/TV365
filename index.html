@@ -4361,6 +4361,42 @@ document.addEventListener('keydown', function (e) {
 }, true);
 </script>
 
+<script>
+/* === TV365 V7.20 Performance Patch === */
+(function(){
+if(window.__TV365_PERF_PATCH__) return;
+window.__TV365_PERF_PATCH__=true;
+
+/* Disable Picture in Picture */
+document.addEventListener('DOMContentLoaded',()=>{
+ const v=document.getElementById('video-player');
+ if(v){
+   v.disablePictureInPicture=true;
+   v.setAttribute('disablePictureInPicture','');
+   v.setAttribute('playsinline','');
+ }
+});
+
+/* Better cleanup */
+window.addEventListener('beforeunload',()=>{
+ try{ if(window.hlsInstance) hlsInstance.destroy(); }catch(e){}
+ try{ if(window.shakaInstance) shakaInstance.destroy(); }catch(e){}
+ try{ if(window.mpegtsInstance) mpegtsInstance.destroy(); }catch(e){}
+});
+
+/* Periodic GC helpers */
+setInterval(()=>{
+ try{
+   if(window.hlsInstance && hlsInstance.media && hlsInstance.media.buffered.length){
+      if(document.hidden) hlsInstance.stopLoad();
+      else hlsInstance.startLoad(-1);
+   }
+ }catch(e){}
+},60000);
+
+console.log("TV365 V7.20 Performance Patch loaded");
+})();
+</script>
 </body>
 
 </html>
