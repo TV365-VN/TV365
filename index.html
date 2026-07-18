@@ -3254,6 +3254,9 @@ xhrSetup:function(xhr){xhr.withCredentials=false;try{xhr.setRequestHeader("Accep
                     enableWorker: __tvIsAndroidTv() ? false : true,
                     lowLatencyMode: false,
                     autoStartLoad: true,
+                    liveDurationInfinity: true,
+                    progressive: true,
+                    preserveManualLevelOnError: false,
 
                     startLevel: -1,
                     testBandwidth: true,
@@ -3510,7 +3513,35 @@ xhrSetup:function(xhr){xhr.withCredentials=false;try{xhr.setRequestHeader("Accep
 
                 let tv365LastAdaptiveDownshift = 0;
 
-                hlsInstance.on(Hls.Events.ERROR, (event, data) => {
+                
+// TV365 Android watchdog: tránh đen màn hình sau thời gian dài
+                videoPlayer.addEventListener('ended', ()=> {
+                    if(currentPlayingUrl===url && hlsInstance){
+                        hlsInstance.startLoad(-1);
+                        videoPlayer.play().catch(()=>{});
+                    }
+                });
+                document.addEventListener('visibilitychange', ()=>{
+                    if(!document.hidden && currentPlayingUrl===url && hlsInstance){
+                        hlsInstance.startLoad(-1);
+                        if(videoPlayer.readyState<2){
+                            hlsInstance.recoverMediaError();
+                        }
+                        videoPlayer.play().catch(()=>{});
+                    }
+                });
+                setInterval(()=>{
+                    if(currentPlayingUrl===url && hlsInstance && !videoPlayer.paused){
+                        if(videoPlayer.readyState<2){
+                            try{
+                                hlsInstance.startLoad(-1);
+                                hlsInstance.recoverMediaError();
+                            }catch(e){}
+                        }
+                    }
+                },30000);
+
+hlsInstance.on(Hls.Events.ERROR, (event, data) => {
                     const adaptiveDetails = String(data?.details || "").toLowerCase();
 
                     if (
