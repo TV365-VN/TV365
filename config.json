@@ -1,6 +1,11 @@
 {
   "version": "1.0",
 
+  "app": {
+    "enabled": true,
+    "message": ""
+  },
+
   "premium": {
     "enabled": true,
     "title": "TV365 PREMIUM",
