@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "premium": {
+    "enabled": true,
+    "title": "TV365 PREMIUM",
+    "message": "Thiết bị chưa được kích hoạt Premium. Vui lòng quét mã QR để liên hệ quản trị viên.",
+    "button": "LÀM MỚI GIẤY PHÉP"
+  },
+  "contact": {
+    "qr": "https://tv365-vn.github.io/TV365/QR_TELEGRAM.jpg"
+  },
+  "api": {
+    "license": ""
+  }
+}
