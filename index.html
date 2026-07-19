@@ -1,3 +1,22 @@
+<script>
+(() => {
+    const PASSWORD = "Truyenhinhtv365@0702#free";
+
+    const input = prompt("🔒 Vui lòng nhập mật khẩu để truy cập TV365:");
+
+    if (input !== PASSWORD) {
+        document.body.innerHTML = `
+            <div style="display:flex;justify-content:center;align-items:center;height:100vh;font-family:Arial,sans-serif;background:#111;color:#fff;text-align:center;">
+                <div>
+                    <h2>❌ Sai mật khẩu!</h2>
+                    <p>Bạn không có quyền truy cập.</p>
+                </div>
+            </div>
+        `;
+        throw new Error("Access denied");
+    }
+})();
+</script>
 <!DOCTYPE html>
 <html lang="vi">
 
