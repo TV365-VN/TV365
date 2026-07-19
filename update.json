@@ -2,6 +2,6 @@
   "versionCode": 7,
   "versionName": "V7",
   "apkUrl": "https://tv365-vn.github.io/TV365/TV365_V7.apk",
-  "forceUpdate": false,
+  "forceUpdate": true,
   "message": "TV365 V7\n\n📺 TIVI\n• Sửa lỗi Remote bấm chậm trên một số dòng TV.\n• Sửa lỗi đứng hình khi xem trên một số dòng TV.\n• Tối ưu tự động chọn chất lượng hình ảnh cao nhất cho một số dòng TV HD / HD+.\n\n📱 ĐIỆN THOẠI\n• Sửa lỗi một số thiết bị không thể chọn chất lượng khi xem.\n• Sửa lỗi một số thiết bị không thể xoay ngang màn hình khi xem.\n\nNhấn CẬP NHẬT để nâng cấp lên TV365 V7."
 }
