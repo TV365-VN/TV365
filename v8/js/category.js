@@ -3,6 +3,7 @@
 // ===============================
 
 let currentCategory = "TẤT CẢ";
+let focusedCategory = "TẤT CẢ";
 
 function createCategories() {
 
@@ -30,6 +31,23 @@ function createCategoryButton(name) {
         button.classList.add("active");
     }
 
+    if (name === focusedCategory) {
+        button.classList.add("focus");
+    }
+
+    // Khi remote hoặc chuột focus vào nút
+    button.addEventListener("focus", function () {
+
+        focusedCategory = name;
+
+        document
+            .querySelectorAll(".category-btn")
+            .forEach(btn => btn.classList.remove("focus"));
+
+        button.classList.add("focus");
+    });
+
+    // Khi nhấn OK hoặc click
     button.onclick = function () {
 
         currentCategory = name;
