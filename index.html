@@ -2990,47 +2990,17 @@ content:"";position:absolute;inset:2px;background:#091126;border-radius:10px}
                     }
 
                     if (statusEl) statusEl.classList.add('hidden');
-                    console.log(`[Resolver] Kết quả cuối: ${url.substring(0,80)} → ${String(resolvedUrl).substring(0,120)}`);
-                } else {
-                    // === CHẾ ĐỘ TẮT: Chỉ follow redirect, không parse ===
-                    console.log('[Resolver] Resolve TẮT, chỉ follow redirect...');
-                    try {
-                        const xhrResult = await xhrFetchText(url);
-                        const finalUrl = xhrResult.finalUrl || url;
-                        if (finalUrl !== url && /\.(m3u8|mpd|ts)(\?|#|$)/i.test(finalUrl)) {
-                            resolvedUrl = finalUrl;
-                            console.log(`[Resolver] ✅ Redirect đến: ${resolvedUrl.substring(0,120)}`);
-                        } else if (xhrResult.text && xhrResult.text.length > 5) {
-                            // Không redirect tới stream, thử parse nhanh
-                            const parsed = parseResponseForStream(xhrResult.text, finalUrl, url);
-                            if (parsed && parsed.startsWith('http')) {
-                                resolvedUrl = parsed;
-                                console.log(`[Resolver] ✅ Tìm thấy trong response: ${resolvedUrl.substring(0,120)}`);
-                            }
-                        }
-                    } catch (e) {
-                        console.warn('[Resolver] XHR redirect thất bại, thử fetch:', e.message);
-                        try {
-                            const resp = await fetch(url, {
-                                headers: {
-                                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-                                    'Accept': '*/*',
-                                },
-                                redirect: 'follow',
-                            });
-                            if (resp.ok) {
-                                const finalUrl = resp.url;
-                                if (finalUrl !== url) {
-                                    resolvedUrl = finalUrl;
-                                    console.log(`[Resolver] ✅ Fetch redirect đến: ${resolvedUrl.substring(0,120)}`);
-                                }
-                            }
-                        } catch (e2) {
-                            console.warn('[Resolver] Fetch redirect cũng thất bại:', e2.message);
-                        }
-                    }
-                }
-            }
+                   console.log(`[Resolver] Kết quả cuối: ${url.substring(0,80)} → ${String(resolvedUrl).substring(0,120)}`);
+
+// ===== Android TV365 V8 (Media3) =====
+if (window.TV365App &&
+    typeof window.TV365App.playChannel === "function") {
+
+    window.TV365App.playChannel(resolvedUrl);
+    return;
+}
+
+// ===== Web Browser =====
 
             const isMPD = resolvedUrl.includes('.mpd') || (channel.props && channel.props['inputstream.adaptive.manifest_type'] === 'mpd');
             const isRawTS = /\.ts(\?|$)/i.test(resolvedUrl) || /extension=ts/i.test(resolvedUrl) ||
