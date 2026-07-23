@@ -1,1 +1,457 @@
 
+/* ===========================
+   TV365 PREMIUM V8
+   style.css - Part 1
+=========================== */
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:Arial,Helvetica,sans-serif;
+}
+
+html,
+body{
+    width:100%;
+    height:100%;
+    overflow:hidden;
+    background:#0F172A;
+    color:#FFFFFF;
+}
+
+body{
+    display:flex;
+}
+
+.app{
+    width:100%;
+    height:100vh;
+    display:flex;
+    background:#0F172A;
+}
+
+/* ===========================
+   SIDEBAR
+=========================== */
+
+.sidebar{
+    width:230px;
+    background:#111827;
+    border-right:1px solid rgba(255,255,255,.08);
+
+    display:flex;
+    flex-direction:column;
+    justify-content:space-between;
+    align-items:center;
+
+    padding:25px 15px;
+}
+
+.brand{
+    width:100%;
+    text-align:center;
+}
+
+.logo{
+    width:95px;
+    height:95px;
+    object-fit:contain;
+    margin:auto;
+}
+
+.title{
+    margin-top:18px;
+    font-size:32px;
+    font-weight:700;
+    letter-spacing:2px;
+}
+
+.premium{
+
+    margin-top:12px;
+
+    display:inline-block;
+
+    padding:8px 18px;
+
+    border-radius:30px;
+
+    background:#FF9800;
+
+    color:#FFF;
+
+    font-size:15px;
+
+    font-weight:bold;
+
+    letter-spacing:1px;
+
+    box-shadow:0 0 18px rgba(255,152,0,.45);
+
+}
+
+.sidebar-bottom{
+
+    width:100%;
+
+    text-align:center;
+
+}
+
+.boy{
+
+    width:170px;
+
+    max-width:100%;
+
+}
+
+/* ===========================
+   CONTENT
+=========================== */
+
+.content{
+
+    flex:1;
+
+    display:flex;
+
+    flex-direction:column;
+
+    padding:18px;
+
+    gap:16px;
+
+}
+
+/* ===========================
+   PLAYER
+=========================== */
+
+.player-section{
+
+    height:45%;
+
+}
+
+.player{
+
+    width:100%;
+
+    height:100%;
+
+    background:#1E293B;
+
+    border-radius:20px;
+
+    overflow:hidden;
+
+    border:1px solid rgba(255,255,255,.06);
+
+    box-shadow:
+    0 10px 35px rgba(0,0,0,.35);
+
+}
+/* ===========================
+   CATEGORY BAR
+=========================== */
+
+.category-bar{
+
+    min-height:70px;
+
+    display:flex;
+
+    align-items:center;
+
+    gap:12px;
+
+    overflow-x:auto;
+
+    overflow-y:hidden;
+
+    scrollbar-width:none;
+
+}
+
+.category-bar::-webkit-scrollbar{
+
+    display:none;
+
+}
+
+.category-btn{
+
+    min-width:130px;
+
+    height:48px;
+
+    border:none;
+
+    border-radius:14px;
+
+    background:#1F2937;
+
+    color:#FFFFFF;
+
+    font-size:17px;
+
+    font-weight:600;
+
+    cursor:pointer;
+
+    transition:.25s;
+
+}
+
+.category-btn:hover{
+
+    background:#2B3648;
+
+}
+
+.category-btn.active{
+
+    background:#FF9800;
+
+    color:#FFF;
+
+    box-shadow:0 0 18px rgba(255,152,0,.55);
+
+}
+
+/* ===========================
+   CHANNEL GRID
+=========================== */
+
+.channel-section{
+
+    flex:1;
+
+    overflow-y:auto;
+
+    padding-right:6px;
+
+}
+
+.channel-section::-webkit-scrollbar{
+
+    width:8px;
+
+}
+
+.channel-section::-webkit-scrollbar-thumb{
+
+    background:#384152;
+
+    border-radius:20px;
+
+}
+
+.channel-grid{
+
+    display:grid;
+
+    grid-template-columns:repeat(6,1fr);
+
+    gap:16px;
+
+}
+
+/* ===========================
+   CHANNEL CARD
+=========================== */
+
+.channel-card{
+
+    height:120px;
+
+    background:#1F2937;
+
+    border-radius:18px;
+
+    display:flex;
+
+    flex-direction:column;
+
+    justify-content:center;
+
+    align-items:center;
+
+    cursor:pointer;
+
+    transition:.22s;
+
+    border:2px solid transparent;
+
+}
+
+.channel-card img{
+
+    width:60px;
+
+    height:60px;
+
+    object-fit:contain;
+
+    margin-bottom:10px;
+
+}
+
+.channel-name{
+
+    font-size:16px;
+
+    font-weight:600;
+
+    color:#FFFFFF;
+
+    text-align:center;
+
+}
+
+/* ===========================
+   TV REMOTE SELECT
+=========================== */
+
+.channel-card:hover,
+
+.channel-card:focus,
+
+.channel-card.active{
+
+    background:#FF9800;
+
+    border-color:#FFD180;
+
+    transform:scale(1.05);
+
+    box-shadow:
+    0 0 24px rgba(255,152,0,.65);
+
+}
+
+.channel-card:hover .channel-name,
+
+.channel-card:focus .channel-name,
+
+.channel-card.active .channel-name{
+
+    color:#FFFFFF;
+
+}
+/* ===========================
+   ANIMATION
+=========================== */
+
+@keyframes fadeIn{
+    from{
+        opacity:0;
+        transform:translateY(10px);
+    }
+    to{
+        opacity:1;
+        transform:translateY(0);
+    }
+}
+
+.channel-card{
+    animation:fadeIn .25s ease;
+}
+
+/* ===========================
+   TV FOCUS EFFECT
+=========================== */
+
+.channel-card.active,
+.channel-card:focus{
+    outline:none;
+    z-index:10;
+}
+
+.category-btn:focus{
+    outline:none;
+    background:#FF9800;
+    color:#FFFFFF;
+    box-shadow:0 0 18px rgba(255,152,0,.55);
+}
+
+/* ===========================
+   RESPONSIVE
+=========================== */
+
+@media (max-width:1600px){
+
+    .channel-grid{
+        grid-template-columns:repeat(5,1fr);
+    }
+
+}
+
+@media (max-width:1280px){
+
+    .sidebar{
+        width:200px;
+    }
+
+    .channel-grid{
+        grid-template-columns:repeat(4,1fr);
+    }
+
+}
+
+@media (max-width:900px){
+
+    .content{
+        padding:12px;
+    }
+
+    .player-section{
+        height:38%;
+    }
+
+    .channel-grid{
+        grid-template-columns:repeat(3,1fr);
+    }
+
+}
+
+@media (max-width:700px){
+
+    .sidebar{
+        display:none;
+    }
+
+    .channel-grid{
+        grid-template-columns:repeat(2,1fr);
+    }
+
+}
+
+/* ===========================
+   PLAYER PLACEHOLDER
+=========================== */
+
+.player::before{
+
+    content:"TV365 PREMIUM";
+
+    width:100%;
+    height:100%;
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    font-size:42px;
+
+    font-weight:bold;
+
+    color:rgba(255,255,255,.12);
+
+    letter-spacing:4px;
+
+}
