@@ -3,7 +3,7 @@ const M3U_URL = atob(
 );
 
 let channels = [];
-let categories = [];
+let categories = ["TẤT CẢ"];
 
 async function loadM3U() {
     try {
@@ -41,34 +41,28 @@ function parseM3U(text) {
                 line.split(",").pop().trim();
 
             const logo =
-                (
-                    line.match(/tvg-logo="(.*?)"/) || []
-                )[1] || "";
+                (line.match(/tvg-logo="(.*?)"/) || [])[1] || "";
 
-            const group =
-                (
-                    line.match(/group-title="(.*?)"/) || []
-                )[1] || "KHÁC";
+            let group =
+                (line.match(/group-title="(.*?)"/) || [])[1] || "KHÁC";
+
+            // Nếu playlist có group-title="TẤT CẢ"
+            // thì đổi sang KHÁC để không tạo thêm nút TẤT CẢ
+            if (group === "TẤT CẢ") {
+                group = "KHÁC";
+            }
 
             current = {
-
                 name,
-
                 logo,
-
                 group
-
             };
 
             if (!categories.includes(group)) {
-
                 categories.push(group);
-
             }
 
-        }
-
-        else if (
+        } else if (
             line &&
             !line.startsWith("#")
         ) {
