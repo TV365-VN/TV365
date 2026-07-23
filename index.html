@@ -3247,17 +3247,6 @@ content:"";position:absolute;inset:2px;background:#091126;border-radius:10px}
             }
             // --- Case 2: HLS / M3U8 (Using Hls.js) ---
             else if (typeof Hls !== 'undefined' && Hls.isSupported() && !isMPD) {
-// ===== Android TV365 Native =====
-    if (
-        window.TV365App &&
-        typeof window.TV365App.playChannel === "function" &&
-        resolvedUrl
-    ) {
-        console.log("TV365 Native:", resolvedUrl);
-        loadingOverlay.classList.add("hidden");
-        window.TV365App.playChannel(resolvedUrl);
-        return;
-    }
                 const tv365WeakVtvFastMode = tv365IsTvVtv(channel) && tv365IsWeakHdTv();
 
                 hlsInstance = new Hls({
