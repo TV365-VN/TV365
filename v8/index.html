@@ -1,1 +1,96 @@
-TEST V8
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>TV365 PREMIUM</title>
+
+    <link rel="stylesheet"
+          href="css/style.css">
+
+</head>
+
+<body>
+
+<div class="app">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+
+        <div class="brand">
+
+            <img src="images/logo.png"
+                 alt="TV365 Logo">
+
+            <h2>TV365</h2>
+
+            <span>PREMIUM</span>
+
+        </div>
+
+        <div class="sidebar-bottom">
+
+            <img src="images/boy.png"
+                 alt="Boy">
+
+        </div>
+
+    </aside>
+
+    <!-- Nội dung -->
+    <main class="content">
+
+        <!-- Player -->
+        <section class="player-section">
+
+            <div id="player"
+                 class="player">
+
+                <div class="player-placeholder">
+
+                    📺 Chọn một kênh để bắt đầu xem
+
+                </div>
+
+            </div>
+
+        </section>
+
+        <!-- Danh mục -->
+        <div id="categoryBar"
+             class="category-bar">
+
+        </div>
+
+        <!-- Danh sách kênh -->
+        <section class="channel-section">
+
+            <div id="channelGrid"
+                 class="channel-grid">
+
+            </div>
+
+        </section>
+
+    </main>
+
+</div>
+
+<!-- HLS.JS -->
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+
+<!-- TV365 -->
+<script src="js/m3u.js"></script>
+<script src="js/category.js"></script>
+<script src="js/channel.js"></script>
+<script src="js/player.js"></script>
+<script src="js/app.js"></script>
+
+</body>
+
+</html>
