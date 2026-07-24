@@ -140,3 +140,50 @@ function playChannel(channel) {
     }
 
 }
+// ===============================
+// Remote TV - Đổi kênh
+// ===============================
+
+document.addEventListener("keydown", function (e) {
+
+    if (!document.fullscreenElement) return;
+
+    if (!window.channels || !window.currentChannel) return;
+
+    let index = window.channels.findIndex(c => c.url === window.currentChannel.url);
+
+    if (index < 0) return;
+
+    switch (e.key) {
+
+        case "ArrowUp":
+
+            e.preventDefault();
+
+            if (index > 0) {
+
+                playChannel(window.channels[index - 1]);
+
+                window.currentChannel = window.channels[index - 1];
+
+            }
+
+            break;
+
+        case "ArrowDown":
+
+            e.preventDefault();
+
+            if (index < window.channels.length - 1) {
+
+                playChannel(window.channels[index + 1]);
+
+                window.currentChannel = window.channels[index + 1];
+
+            }
+
+            break;
+
+    }
+
+});
