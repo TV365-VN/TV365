@@ -9,6 +9,9 @@ window.addEventListener("load", async function () {
     // Đọc error.m3u
     await loadM3U();
 
+    // Cho player.js truy cập danh sách kênh
+    window.channels = channels;
+
     // Tạo danh mục
     createCategories();
 
