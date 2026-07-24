@@ -107,7 +107,7 @@ body{
     display:flex;
     flex-direction:column;
 
-    padding:18px 40px;
+    padding:20px 60px;
 
     gap:16px;
 }
@@ -118,7 +118,7 @@ body{
 
 .player-section{
     height:50%;
-    min-height:360px;
+    min-height:400px;
     flex-shrink:0;
 }
 
