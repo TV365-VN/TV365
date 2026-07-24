@@ -117,16 +117,21 @@ function playChannel(channel) {
     else if (video.canPlayType("application/vnd.apple.mpegurl")) {
 
         video.src = channel.url;
+video.addEventListener("loadedmetadata", function () {
 
-        video.addEventListener("loadedmetadata", function () {
+    video.play().catch(function (err) {
 
-            video.play().catch(function (err) {
+        console.log(err);
 
-                console.log(err);
+    });
 
-            });
+    setTimeout(() => {
+        if (!document.fullscreenElement && video.requestFullscreen) {
+            video.requestFullscreen().catch(() => {});
+        }
+    }, 300);
 
-        });
+});
 
     }
 
