@@ -117,7 +117,7 @@ body{
 =========================== */
 
 .player-section{
-    height:42%;
+    height:50%;
     min-height:360px;
     flex-shrink:0;
 }
