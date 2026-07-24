@@ -146,46 +146,72 @@ function playChannel(channel) {
 // Remote TV - Đổi kênh
 // ===============================
 
+let remoteLock = false;
+
 document.addEventListener("keydown", function (e) {
 
     if (!document.fullscreenElement) return;
 
     if (!window.channels || !window.currentChannel) return;
 
-    let index = window.channels.findIndex(c => c.url === window.currentChannel.url);
+    if (remoteLock) return;
+
+    const key = e.key || "";
+    const code = e.code || "";
+    const keyCode = e.keyCode || e.which;
+
+    let index = window.channels.findIndex(
+        c => c.url === window.currentChannel.url
+    );
 
     if (index < 0) return;
 
-    switch (e.key) {
+    // Kênh trước
+    if (
+        key === "ArrowUp" ||
+        code === "ArrowUp" ||
+        keyCode === 19
+    ) {
 
-        case "ArrowUp":
+        e.preventDefault();
 
-            e.preventDefault();
+        if (index > 0) {
 
-            if (index > 0) {
+            remoteLock = true;
 
-                playChannel(window.channels[index - 1]);
+            playChannel(window.channels[index - 1]);
 
-                window.currentChannel = window.channels[index - 1];
+            setTimeout(() => {
+                remoteLock = false;
+            }, 400);
 
-            }
+        }
 
-            break;
+        return;
+    }
 
-        case "ArrowDown":
+    // Kênh sau
+    if (
+        key === "ArrowDown" ||
+        code === "ArrowDown" ||
+        keyCode === 20
+    ) {
 
-            e.preventDefault();
+        e.preventDefault();
 
-            if (index < window.channels.length - 1) {
+        if (index < window.channels.length - 1) {
 
-                playChannel(window.channels[index + 1]);
+            remoteLock = true;
 
-                window.currentChannel = window.channels[index + 1];
+            playChannel(window.channels[index + 1]);
 
-            }
+            setTimeout(() => {
+                remoteLock = false;
+            }, 400);
 
-            break;
+        }
 
+        return;
     }
 
 });
