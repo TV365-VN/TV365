@@ -107,9 +107,9 @@ body{
     display:flex;
     flex-direction:column;
 
-    padding:20px 60px;
+    padding:clamp(8px,2vw,20px) clamp(10px,3vw,60px);
 
-    gap:16px;
+    gap:clamp(8px,1vw,16px);
 }
 
 /* ===========================
@@ -117,8 +117,7 @@ body{
 =========================== */
 
 .player-section{
-    height:65%;
-    min-height:450px;
+    height:clamp(220px,42vh,520px);
     flex-shrink:0;
 }
 
@@ -146,7 +145,7 @@ body{
     width:100%;
     height:100%;
     display:block;
-    object-fit:contain;
+    object-fit:cover;
     background:#000;
 }
 
@@ -193,8 +192,9 @@ body{
 
 .category-btn{
 
-    min-width:130px;
-    height:48px;
+    min-width:clamp(90px,8vw,130px);
+
+    height:clamp(40px,4vw,48px);
 
     border:none;
 
@@ -204,7 +204,7 @@ body{
 
     color:#FFFFFF;
 
-    font-size:17px;
+    font-size:clamp(14px,1vw,17px);
 
     font-weight:600;
 
@@ -262,9 +262,9 @@ body{
 
     display:grid;
 
-    grid-template-columns:repeat(6,1fr);
+    grid-template-columns:repeat(auto-fit,minmax(clamp(120px,10vw,180px),1fr));
 
-    gap:14px;
+    gap:clamp(8px,1vw,14px);
 
 }
 
@@ -274,7 +274,9 @@ body{
 
 .channel-card{
 
-    height:110px;
+    aspect-ratio:2/1;
+
+    min-height:72px;
 
     background:#1F2937;
 
@@ -300,19 +302,19 @@ body{
 
 .channel-card img{
 
-    width:72px;
+    width:clamp(36px,4vw,72px);
 
-    height:72px;
+    height:clamp(36px,4vw,72px);
 
     object-fit:contain;
 
-    margin-bottom:8px;
+    margin-bottom:4px;
 
 }
 
 .channel-name{
 
-    font-size:20px;
+    font-size:clamp(12px,1vw,20px);
 
     font-weight:700;
 
@@ -373,9 +375,9 @@ body{
 
 @media (max-width:1600px){
 
-    .channel-grid{
-        grid-template-columns:repeat(5,1fr);
-    }
+   .channel-grid{
+       gap:12px;
+   }
 
 }
 
@@ -386,7 +388,7 @@ body{
     }
 
     .channel-grid{
-        grid-template-columns:repeat(4,1fr);
+        gap:10px;
     }
 
 }
@@ -407,14 +409,9 @@ body{
         border-radius:16px;
     }
 
-    .channel-grid{
-        grid-template-columns:repeat(3,1fr);
-        gap:10px;
-    }
-
-    .channel-card{
-        height:90px;
-    }
+   .channel-card{
+       min-height:90px;
+   }
 
     .channel-card img{
         width:56px;
@@ -471,6 +468,7 @@ body{
     position:absolute;
 
     inset:0;
+
 
     display:flex;
 
