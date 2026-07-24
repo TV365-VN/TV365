@@ -394,16 +394,35 @@ body{
 @media (max-width:900px){
 
     .content{
-        padding:12px;
+        padding:10px;
+        gap:12px;
     }
 
     .player-section{
-        height:38%;
-        min-height:240px;
+        height:28%;
+        min-height:180px;
+    }
+
+    .player{
+        border-radius:16px;
     }
 
     .channel-grid{
         grid-template-columns:repeat(3,1fr);
+        gap:10px;
+    }
+
+    .channel-card{
+        height:90px;
+    }
+
+    .channel-card img{
+        width:56px;
+        height:56px;
+    }
+
+    .channel-name{
+        font-size:16px;
     }
 
 }
@@ -414,8 +433,29 @@ body{
         display:none;
     }
 
+    .content{
+        padding:8px;
+        gap:10px;
+    }
+
+    .player-section{
+        height:200px;
+        min-height:200px;
+    }
+
+    .player-title{
+        font-size:14px;
+    }
+
+    .category-btn{
+        min-width:100px;
+        height:42px;
+        font-size:15px;
+    }
+
     .channel-grid{
         grid-template-columns:repeat(2,1fr);
+        gap:8px;
     }
 
 }
