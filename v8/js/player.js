@@ -3,6 +3,8 @@
 // ===============================
 
 let hls = null;
+let shakaPlayer = null;
+let tsPlayer = null;
 
 // Phát kênh
 function playChannel(channel) {
@@ -11,24 +13,34 @@ function playChannel(channel) {
 
     if (!player || !channel) return;
 
-    // Hủy HLS cũ
+    // Hủy player cũ
     if (hls) {
         hls.destroy();
         hls = null;
     }
 
-    // Dừng video cũ nếu có
+    if (shakaPlayer) {
+        shakaPlayer.destroy();
+        shakaPlayer = null;
+    }
+
+    if (tsPlayer) {
+        tsPlayer.destroy();
+        tsPlayer = null;
+    }
+
+    // Dừng video cũ
     const oldVideo = player.querySelector("video");
+
     if (oldVideo) {
         oldVideo.pause();
         oldVideo.removeAttribute("src");
         oldVideo.load();
     }
 
-    // Xóa toàn bộ nội dung
     player.innerHTML = "";
 
-    // Tạo video
+    // Video
     const video = document.createElement("video");
 
     video.autoplay = true;
@@ -38,18 +50,23 @@ function playChannel(channel) {
     video.style.width = "100%";
     video.style.height = "100%";
     video.style.display = "block";
-    video.style.objectFit = "contain";
+
+    // Lấp kín khung phát
+    video.style.objectFit = "cover";
+
     video.style.background = "#000";
 
     player.appendChild(video);
 
-    // Tiêu đề kênh
+    // Tiêu đề
     const title = document.createElement("div");
 
     title.className = "player-title";
     title.textContent = channel.name || "";
 
     player.appendChild(title);
+
+    const url = (channel.url || "").toLowerCase();
 
     // Nếu hỗ trợ HLS.js
     if (Hls.isSupported()) {
@@ -78,6 +95,11 @@ function playChannel(channel) {
                 console.log(err);
 
             });
+            setTimeout(() => {
+                if (document.fullscreenElement == null && video.requestFullscreen) {
+                    video.requestFullscreen().catch(() => {});
+                }
+            }, 300);
 
         });
 
