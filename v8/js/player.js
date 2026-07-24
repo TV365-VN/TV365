@@ -9,6 +9,8 @@ let tsPlayer = null;
 // Phát kênh
 function playChannel(channel) {
 
+    window.currentChannel = channel;
+
     const player = document.getElementById("player");
 
     if (!player || !channel) return;
