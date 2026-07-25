@@ -79,7 +79,7 @@ function playChannel(channel) {
 
         } else {
 
-            video.requestFullscreen?.().catch(() => {});
+            player.requestFullscreen?.().catch(()=>{});
 
         }
 
@@ -268,12 +268,12 @@ function playChannel(channel) {
 
             setTimeout(function () {
 
-                if (!document.fullscreenElement &&
-                    video.requestFullscreen) {
+             if (!document.fullscreenElement &&
+                 player.requestFullscreen) {
 
-                    video.requestFullscreen().catch(() => {});
+                 player.requestFullscreen().catch(()=>{});
 
-                }
+             }
 
             }, 300);
 
@@ -458,7 +458,7 @@ document.addEventListener("keydown", function (e) {
 
         } else {
 
-            video.requestFullscreen?.().catch(() => {});
+            player.requestFullscreen?.().catch(()=>{});
 
         }
 
