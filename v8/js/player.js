@@ -65,26 +65,12 @@ function playChannel(channel) {
     video.style.width = "100%";
     video.style.height = "100%";
     video.style.display = "block";
-    video.style.objectFit = "contain";
+    video.style.objectFit = "cover";
     video.style.background = "#000";
 
     player.appendChild(video);
 
-    // Fullscreen bằng double click
-    video.ondblclick = function () {
-
-        if (document.fullscreenElement) {
-
-            document.exitFullscreen?.();
-
-        } else {
-
-            player.requestFullscreen?.().catch(()=>{});
-
-        }
-
-    };
-
+  
     // Tiêu đề
     const title = document.createElement("div");
 
@@ -99,6 +85,24 @@ function playChannel(channel) {
 
     const qualityButton = document.getElementById("qualityButton");
     const qualityMenu = document.getElementById("qualityMenu");
+    const fullscreenButton =
+        document.getElementById("fullscreenButton");
+        if(fullscreenButton){
+
+          fullscreenButton.onclick = async function () {
+
+              if (document.fullscreenElement) {
+
+                  await document.exitFullscreen();
+
+              } else {
+
+                  await player.requestFullscreen();
+
+              }
+
+          };
+          }
 
     if (qualityButton && qualityMenu) {
 
@@ -335,16 +339,15 @@ function playChannel(channel) {
 
             video.play().catch(console.log);
 
-            setTimeout(function () {
+           setTimeout(function(){
 
-                if (!document.fullscreenElement &&
-                    video.requestFullscreen) {
+               if(!document.fullscreenElement){
 
-                    video.requestFullscreen().catch(() => {});
+                   player.requestFullscreen();
 
-                }
+               }
 
-            }, 300);
+           },300);
 
         });
 
@@ -448,32 +451,6 @@ document.addEventListener("keydown", function (e) {
 });
 
 // ===============================
-// Phím F - Fullscreen
-// ===============================
-
-document.addEventListener("keydown", function (e) {
-
-    if (e.key === "f" || e.key === "F") {
-
-        const video = document.querySelector("#player video");
-
-        if (!video) return;
-
-        if (document.fullscreenElement) {
-
-            document.exitFullscreen?.();
-
-        } else {
-
-            player.requestFullscreen?.().catch(()=>{});
-
-        }
-
-    }
-
-});
-
-// ===============================
 // Đóng menu Quality khi click ngoài
 // ===============================
 
@@ -485,8 +462,28 @@ document.addEventListener("click", function (e) {
     if (!btn || !menu) return;
 
     if (!btn.contains(e.target) && !menu.contains(e.target)) {
-
         menu.style.display = "none";
+    }
+
+});
+document.addEventListener("fullscreenchange", function () {
+const menu = document.getElementById("qualityMenu");
+
+if (menu) {
+    menu.style.display = "none";
+}
+
+    const btn = document.getElementById("fullscreenButton");
+
+    if (!btn) return;
+
+    if (document.fullscreenElement) {
+
+        btn.textContent = "🡼";
+
+    } else {
+
+        btn.textContent = "⛶";
 
     }
 
