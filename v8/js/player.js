@@ -19,9 +19,10 @@ function playChannel(channel) {
 
     window.currentChannel = channel;
 
-    const player = document.getElementById("player");
+  const player = document.getElementById("player");
+  const playerSection = document.querySelector(".player-section");
 
-    if (!player) return;
+  if (!player || !playerSection) return;
 
     // Hủy player cũ
     if (hls) {
@@ -282,7 +283,7 @@ function playChannel(channel) {
             setTimeout(function () {
 
              if (!document.fullscreenElement &&
-                 player.requestFullscreen) {
+                 playerSection.requestFullscreen) {
 
                  playerSection.requestFullscreen().catch(()=>{});
 
@@ -345,7 +346,7 @@ function playChannel(channel) {
 
                if(!document.fullscreenElement){
 
-                   player.requestFullscreen();
+                   playerSection.requestFullscreen();
 
                }
 
