@@ -487,3 +487,81 @@ body{
     pointer-events:none;
 
 }
+/* ===========================
+   Quality Button
+=========================== */
+
+.player{
+    position:relative;
+}
+
+.player-controls{
+
+    position:absolute;
+
+    top:15px;
+    right:15px;
+
+    z-index:9999;
+
+}
+
+.quality-button{
+
+    padding:8px 14px;
+
+    border:none;
+
+    border-radius:8px;
+
+    background:rgba(0,0,0,.65);
+
+    color:#fff;
+
+    font-size:14px;
+
+    cursor:pointer;
+
+    transition:.2s;
+
+}
+
+.quality-button:hover{
+
+    background:#ff9800;
+
+}
+
+.quality-menu{
+
+    display:none;
+
+    margin-top:8px;
+
+    min-width:110px;
+
+    border-radius:8px;
+
+    background:rgba(20,20,20,.96);
+
+    overflow:hidden;
+
+    box-shadow:0 0 10px rgba(0,0,0,.4);
+
+}
+
+.quality-item{
+
+    padding:10px;
+
+    color:#fff;
+
+    cursor:pointer;
+
+}
+
+.quality-item:hover{
+
+    background:#ff9800;
+
+}
