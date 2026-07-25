@@ -189,8 +189,15 @@ function playChannel(channel) {
 
                 // ===== Danh sách chất lượng =====
 
-                [...hls.levels]
-                    .map((level, index) => ({ level, index }))
+                const uniqueLevels = [];
+
+                hls.levels.forEach((level, index) => {
+                    if (!uniqueLevels.some(x => x.level.height === level.height)) {
+                        uniqueLevels.push({ level, index });
+                    }
+                });
+
+                uniqueLevels
                     .sort((a, b) => (b.level.height || 0) - (a.level.height || 0))
                     .forEach(function (itemData) {
 
