@@ -70,7 +70,9 @@ function playChannel(channel) {
 
     player.appendChild(video);
 
-  
+    // Thêm dòng này
+    player.classList.add("playing");
+
     // Tiêu đề
     const title = document.createElement("div");
 
@@ -467,7 +469,9 @@ document.addEventListener("click", function (e) {
 
 });
 document.addEventListener("fullscreenchange", function () {
-const menu = document.getElementById("qualityMenu");
+
+    const player = document.getElementById("player");
+    const menu = document.getElementById("qualityMenu");
 
 if (menu) {
     menu.style.display = "none";
@@ -477,15 +481,15 @@ if (menu) {
 
     if (!btn) return;
 
-    if (document.fullscreenElement) {
+  if (document.fullscreenElement) {
 
-        btn.textContent = "🡼";
+      player.classList.add("playing");
+      btn.textContent = "🡼";
 
-    } else {
+  } else {
 
-        btn.textContent = "⛶";
+      player.classList.remove("playing");
+      btn.textContent = "⛶";
 
-    }
-
+  }
 });
-
