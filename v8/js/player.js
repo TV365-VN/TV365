@@ -100,7 +100,7 @@ function playChannel(channel) {
 
               } else {
 
-                  await playerSection.requestFullscreen();
+                  await player.requestFullscreen();
 
               }
 
@@ -282,12 +282,11 @@ function playChannel(channel) {
 
             setTimeout(function () {
 
-             if (!document.fullscreenElement &&
-                 playerSection.requestFullscreen) {
+            if (!document.fullscreenElement &&
+                player.requestFullscreen) {
 
-                 playerSection.requestFullscreen().catch(()=>{});
-
-             }
+                player.requestFullscreen().catch(()=>{});
+            }
 
             }, 300);
 
@@ -346,7 +345,7 @@ function playChannel(channel) {
 
                if(!document.fullscreenElement){
 
-                   playerSection.requestFullscreen();
+                   player.requestFullscreen();
 
                }
 
