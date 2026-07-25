@@ -6,6 +6,9 @@ let hls = null;
 let shakaPlayer = null;
 let tsPlayer = null;
 
+// Đọc chất lượng đã lưu
+let qualityLevel = parseInt(localStorage.getItem("quality") ?? "-1");
+
 // Phát kênh
 function playChannel(channel) {
 
@@ -54,11 +57,24 @@ function playChannel(channel) {
     video.style.display = "block";
 
     // Lấp kín khung phát
-    video.style.objectFit = "cover";
+    video.style.objectFit = "contain";
 
     video.style.background = "#000";
 
     player.appendChild(video);
+    video.ondblclick = function () {
+
+        if (!document.fullscreenElement) {
+
+       video.requestFullscreen?.().catch(()=>{});
+
+        } else {
+
+            document.exitFullscreen?.();
+
+        }
+
+    };
 
     // Tiêu đề
     const title = document.createElement("div");
@@ -68,17 +84,19 @@ function playChannel(channel) {
 
     player.appendChild(title);
 
-    const url = (channel.url || "").toLowerCase();
 
     // Nếu hỗ trợ HLS.js
     if (Hls.isSupported()) {
 
-        hls = new Hls({
+    hls = new Hls({
 
-            enableWorker: true,
-            lowLatencyMode: true
+        enableWorker: true,
+        lowLatencyMode: true,
 
-        });
+        startLevel: -1,
+        capLevelToPlayerSize: false
+
+    });
 
         hls.loadSource(channel.url);
 
@@ -90,14 +108,32 @@ function playChannel(channel) {
 
         });
 
-        hls.on(Hls.Events.MANIFEST_PARSED, function () {
+       hls.on(Hls.Events.MANIFEST_PARSED, function () {
 
-            video.play().catch(function (err) {
+           if (hls.levels.length > 0) {
 
-                console.log(err);
+               if (qualityLevel == -1) {
+let best = 0;
 
-            });
-            setTimeout(() => {
+hls.levels.forEach((l, i) => {
+    if ((l.height || 0) > (hls.levels[best].height || 0)) {
+        best = i;
+    }
+});
+
+hls.currentLevel = best;
+
+               } else {
+
+                   hls.currentLevel = qualityLevel;
+
+               }
+
+           }
+
+           video.play().catch(console.log);
+
+           setTimeout(() => {
                 if (document.fullscreenElement == null && video.requestFullscreen) {
                     video.requestFullscreen().catch(() => {});
                 }
@@ -217,6 +253,27 @@ document.addEventListener("keydown", function (e) {
         }
 
         return;
+    }
+
+});
+document.addEventListener("keydown",function(e){
+
+    if(e.key=="f" || e.key=="F"){
+
+        const video=document.querySelector("video");
+
+        if(!video) return;
+
+        if(document.fullscreenElement){
+
+            document.exitFullscreen?.();
+
+        }else{
+
+            video.requestFullscreen?.().catch(()=>{});
+
+        }
+
     }
 
 });
