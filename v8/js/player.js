@@ -1,22 +1,27 @@
 // ===============================
-// TV365 V8 - player.js
+// TV365 V8.5 - player.js
 // ===============================
 
 let hls = null;
 let shakaPlayer = null;
 let tsPlayer = null;
 
-// Đọc chất lượng đã lưu
+// -1 = AUTO
 let qualityLevel = parseInt(localStorage.getItem("quality") ?? "-1");
 
+// ===============================
 // Phát kênh
+// ===============================
+
 function playChannel(channel) {
+
+    if (!channel) return;
 
     window.currentChannel = channel;
 
     const player = document.getElementById("player");
 
-    if (!player || !channel) return;
+    if (!player) return;
 
     // Hủy player cũ
     if (hls) {
@@ -34,18 +39,23 @@ function playChannel(channel) {
         tsPlayer = null;
     }
 
-    // Dừng video cũ
-    const oldVideo = player.querySelector("video");
+    // Xóa video cũ
+    player.querySelectorAll("video").forEach(video => {
 
-    if (oldVideo) {
-        oldVideo.pause();
-        oldVideo.removeAttribute("src");
-        oldVideo.load();
-    }
+        video.pause();
 
-    player.innerHTML = "";
+        video.removeAttribute("src");
 
-    // Video
+        video.load();
+
+        video.remove();
+
+    });
+
+    // Xóa tiêu đề cũ
+    player.querySelectorAll(".player-title").forEach(e => e.remove());
+
+    // Video mới
     const video = document.createElement("video");
 
     video.autoplay = true;
@@ -55,22 +65,21 @@ function playChannel(channel) {
     video.style.width = "100%";
     video.style.height = "100%";
     video.style.display = "block";
-
-    // Lấp kín khung phát
     video.style.objectFit = "contain";
-
     video.style.background = "#000";
 
     player.appendChild(video);
+
+    // Fullscreen bằng double click
     video.ondblclick = function () {
 
-        if (!document.fullscreenElement) {
+        if (document.fullscreenElement) {
 
-       video.requestFullscreen?.().catch(()=>{});
+            document.exitFullscreen?.();
 
         } else {
 
-            document.exitFullscreen?.();
+            video.requestFullscreen?.().catch(() => {});
 
         }
 
@@ -84,19 +93,47 @@ function playChannel(channel) {
 
     player.appendChild(title);
 
+    // ===============================
+    // Quality Controls
+    // ===============================
 
-    // Nếu hỗ trợ HLS.js
+    const qualityButton = document.getElementById("qualityButton");
+    const qualityMenu = document.getElementById("qualityMenu");
+
+    if (qualityButton && qualityMenu) {
+
+        qualityMenu.innerHTML = "";
+
+        qualityMenu.style.display = "none";
+
+        qualityButton.onclick = function (e) {
+
+            e.stopPropagation();
+
+            qualityMenu.style.display =
+                qualityMenu.style.display === "block"
+                    ? "none"
+                    : "block";
+
+        };
+
+    }
+
+    // ===============================
+    // HLS
+    // ===============================
+
     if (Hls.isSupported()) {
 
-    hls = new Hls({
+        hls = new Hls({
 
-        enableWorker: true,
-        lowLatencyMode: true,
+            enableWorker: true,
+            lowLatencyMode: true,
 
-        startLevel: -1,
-        capLevelToPlayerSize: false
+            startLevel: -1,
+            capLevelToPlayerSize: false
 
-    });
+        });
 
         hls.loadSource(channel.url);
 
@@ -108,76 +145,218 @@ function playChannel(channel) {
 
         });
 
-       hls.on(Hls.Events.MANIFEST_PARSED, function () {
+        hls.on(Hls.Events.MANIFEST_PARSED, function () {
+            if (hls.levels.length > 0 && qualityButton && qualityMenu) {
 
-           if (hls.levels.length > 0) {
+                qualityMenu.innerHTML = "";
 
-               if (qualityLevel == -1) {
-let best = 0;
+                // ===== AUTO =====
+                const autoItem = document.createElement("div");
 
-hls.levels.forEach((l, i) => {
-    if ((l.height || 0) > (hls.levels[best].height || 0)) {
-        best = i;
-    }
-});
+                autoItem.className = "quality-item";
+                autoItem.textContent = "AUTO";
 
-hls.currentLevel = best;
+                autoItem.onclick = function () {
 
-               } else {
+                    qualityLevel = -1;
 
-                   hls.currentLevel = qualityLevel;
+                    localStorage.setItem("quality", "-1");
 
-               }
+                    let best = 0;
 
-           }
+                    hls.levels.forEach((l, i) => {
 
-           video.play().catch(console.log);
+                        if ((l.height || 0) > (hls.levels[best].height || 0)) {
 
-           setTimeout(() => {
-                if (document.fullscreenElement == null && video.requestFullscreen) {
-                    video.requestFullscreen().catch(() => {});
+                            best = i;
+
+                        }
+
+                    });
+
+                    hls.currentLevel = best;
+
+                    qualityButton.textContent =
+                        "⚙ AUTO (" +
+                        (hls.levels[best].height || "?") +
+                        "P)";
+
+                    qualityMenu.style.display = "none";
+
+                };
+
+                qualityMenu.appendChild(autoItem);
+
+                // ===== Danh sách chất lượng =====
+
+                [...hls.levels]
+                    .map((level, index) => ({ level, index }))
+                    .sort((a, b) => (b.level.height || 0) - (a.level.height || 0))
+                    .forEach(function (itemData) {
+
+                        const item = document.createElement("div");
+
+                        item.className = "quality-item";
+
+                        item.textContent =
+                            (itemData.level.height || "?") + "P";
+
+                        item.onclick = function () {
+
+                            qualityLevel = itemData.index;
+
+                            localStorage.setItem(
+                                "quality",
+                                qualityLevel
+                            );
+
+                            hls.currentLevel = itemData.index;
+
+                            qualityButton.textContent =
+                                "⚙ " +
+                                (itemData.level.height || "?") +
+                                "P";
+
+                            qualityMenu.style.display = "none";
+
+                        };
+
+                        qualityMenu.appendChild(item);
+
+                    });
+
+                if (qualityLevel == -1) {
+
+                    let best = 0;
+
+                    hls.levels.forEach((l, i) => {
+
+                        if ((l.height || 0) >
+                            (hls.levels[best].height || 0)) {
+
+                            best = i;
+
+                        }
+
+                    });
+
+                    hls.currentLevel = best;
+
+                    qualityButton.textContent =
+                        "⚙ AUTO (" +
+                        (hls.levels[best].height || "?") +
+                        "P)";
+
+                } else {
+
+                    hls.currentLevel = qualityLevel;
+
+                    if (hls.levels[qualityLevel]) {
+
+                        qualityButton.textContent =
+                            "⚙ " +
+                            (hls.levels[qualityLevel].height || "?") +
+                            "P";
+
+                    }
+
                 }
+
+            }
+
+            video.play().catch(console.log);
+
+            setTimeout(function () {
+
+                if (!document.fullscreenElement &&
+                    video.requestFullscreen) {
+
+                    video.requestFullscreen().catch(() => {});
+
+                }
+
             }, 300);
 
         });
-
         hls.on(Hls.Events.ERROR, function (event, data) {
 
             console.log("HLS ERROR", data);
 
+            if (data.fatal) {
+
+                switch (data.type) {
+
+                    case Hls.ErrorTypes.NETWORK_ERROR:
+
+                        console.log("Khôi phục NETWORK...");
+
+                        hls.startLoad();
+
+                        break;
+
+                    case Hls.ErrorTypes.MEDIA_ERROR:
+
+                        console.log("Khôi phục MEDIA...");
+
+                        hls.recoverMediaError();
+
+                        break;
+
+                    default:
+
+                        hls.destroy();
+
+                        break;
+
+                }
+
+            }
+
         });
 
     }
 
+    // ===============================
     // Safari / iPhone
+    // ===============================
+
     else if (video.canPlayType("application/vnd.apple.mpegurl")) {
 
         video.src = channel.url;
-video.addEventListener("loadedmetadata", function () {
 
-    video.play().catch(function (err) {
+        video.addEventListener("loadedmetadata", function () {
 
-        console.log(err);
+            video.play().catch(console.log);
 
-    });
+            setTimeout(function () {
 
-    setTimeout(() => {
-        if (!document.fullscreenElement && video.requestFullscreen) {
-            video.requestFullscreen().catch(() => {});
-        }
-    }, 300);
+                if (!document.fullscreenElement &&
+                    video.requestFullscreen) {
 
-});
+                    video.requestFullscreen().catch(() => {});
+
+                }
+
+            }, 300);
+
+        });
 
     }
 
+    // ===============================
     // Không hỗ trợ
+    // ===============================
+
     else {
 
         player.innerHTML = `
+
             <div class="player-placeholder">
+
                 Thiết bị không hỗ trợ HLS
+
             </div>
+
         `;
 
     }
@@ -222,13 +401,16 @@ document.addEventListener("keydown", function (e) {
 
             playChannel(window.channels[index - 1]);
 
-            setTimeout(() => {
+            setTimeout(function () {
+
                 remoteLock = false;
+
             }, 400);
 
         }
 
         return;
+
     }
 
     // Kênh sau
@@ -246,34 +428,60 @@ document.addEventListener("keydown", function (e) {
 
             playChannel(window.channels[index + 1]);
 
-            setTimeout(() => {
+            setTimeout(function () {
+
                 remoteLock = false;
+
             }, 400);
 
         }
 
-        return;
     }
 
 });
-document.addEventListener("keydown",function(e){
 
-    if(e.key=="f" || e.key=="F"){
+// ===============================
+// Phím F - Fullscreen
+// ===============================
 
-        const video=document.querySelector("video");
+document.addEventListener("keydown", function (e) {
 
-        if(!video) return;
+    if (e.key === "f" || e.key === "F") {
 
-        if(document.fullscreenElement){
+        const video = document.querySelector("#player video");
+
+        if (!video) return;
+
+        if (document.fullscreenElement) {
 
             document.exitFullscreen?.();
 
-        }else{
+        } else {
 
-            video.requestFullscreen?.().catch(()=>{});
+            video.requestFullscreen?.().catch(() => {});
 
         }
 
     }
 
 });
+
+// ===============================
+// Đóng menu Quality khi click ngoài
+// ===============================
+
+document.addEventListener("click", function (e) {
+
+    const btn = document.getElementById("qualityButton");
+    const menu = document.getElementById("qualityMenu");
+
+    if (!btn || !menu) return;
+
+    if (!btn.contains(e.target) && !menu.contains(e.target)) {
+
+        menu.style.display = "none";
+
+    }
+
+});
+
