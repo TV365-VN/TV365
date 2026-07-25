@@ -59,7 +59,7 @@ function playChannel(channel) {
     const video = document.createElement("video");
 
     video.autoplay = true;
-    video.controls = true;
+    video.controls = false;
     video.playsInline = true;
 
     video.style.width = "100%";
