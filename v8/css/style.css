@@ -598,43 +598,69 @@ body{
 /* ===========================
    FULLSCREEN
 =========================== */
-
-.player:fullscreen{
+.player-section:fullscreen{
 
     position:fixed !important;
+
     inset:0;
 
     width:100vw !important;
     height:100vh !important;
 
+    background:#000;
+
+    display:flex;
+    justify-content:center;
+    align-items:center;
+
     margin:0 !important;
     padding:0 !important;
-
-    border-radius:0 !important;
 
     z-index:999999;
 
 }
 
-.player:-webkit-full-screen{
+.player-section:fullscreen .player{
+
+    width:100%;
+    height:100%;
+
+    border-radius:0;
+}
+.player-section:-webkit-full-screen{
 
     position:fixed !important;
+
     inset:0;
 
     width:100vw !important;
     height:100vh !important;
 
+    background:#000;
+
+    display:flex;
+    justify-content:center;
+    align-items:center;
+
     margin:0 !important;
     padding:0 !important;
 
-    border-radius:0 !important;
-
     z-index:999999;
-
 }
 
-.player:fullscreen video,
-.player:-webkit-full-screen video{
+.player-section:-webkit-full-screen .player{
+
+    width:100%;
+    height:100%;
+
+    border-radius:0;
+}
+
+.player-section:fullscreen video,
+.player-section:-webkit-full-screen video{
+
+    width:100%;
+    height:100%;
 
     object-fit:cover;
 
