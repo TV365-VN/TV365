@@ -16,6 +16,7 @@
 </head>
 
 <body>
+<div class="effect-layer"></div>
 
 <div class="app">
 
@@ -30,7 +31,52 @@
 
             <h2 class="title">TV365</h2>
 
-            <span class="premium">PREMIUM</span>
+            <div class="premium-box">
+                <span class="premium">PREMIUM</span>
+            </div>
+
+        </div>
+
+        <div class="mascot-box">
+
+            <img id="mascot"
+                 src="images/mascot.png"
+                 alt="Mascot">
+
+        </div>
+
+        <div class="clock-box">
+
+            <div id="clock">
+                20:30
+            </div>
+
+        </div>
+
+        <div class="weather-box">
+
+            <div id="weather">
+                🌤 30°C
+            </div>
+
+        </div>
+
+        <div class="sidebar-footer">
+
+            🇻🇳
+
+            <div class="island">
+
+                HOÀNG SA<br>
+                TRƯỜNG SA
+
+            </div>
+
+            <small>
+
+                LÀ CỦA VIỆT NAM
+
+            </small>
 
         </div>
 
@@ -98,6 +144,18 @@
 <script src="js/player.js"></script>
 <script src="js/app.js"></script>
 
-</body>
+<script>
 
+    setInterval(function(){
+
+        const d = new Date();
+
+        document.getElementById("clock").innerHTML =
+            d.toLocaleTimeString("vi-VN");
+
+    },1000);
+
+</script>
+
+</body>
 </html>
