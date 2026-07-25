@@ -99,7 +99,7 @@ function playChannel(channel) {
 
               } else {
 
-                  await player.requestFullscreen();
+                  await playerSection.requestFullscreen();
 
               }
 
@@ -284,7 +284,7 @@ function playChannel(channel) {
              if (!document.fullscreenElement &&
                  player.requestFullscreen) {
 
-                 player.requestFullscreen().catch(()=>{});
+                 playerSection.requestFullscreen().catch(()=>{});
 
              }
 
@@ -471,6 +471,7 @@ document.addEventListener("click", function (e) {
 document.addEventListener("fullscreenchange", function () {
 
     const player = document.getElementById("player");
+    const playerSection = document.querySelector(".player-section");
     const menu = document.getElementById("qualityMenu");
 
 if (menu) {
