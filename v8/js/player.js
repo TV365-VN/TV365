@@ -75,7 +75,6 @@ function playChannel(channel) {
     video.style.width = "100%";
     video.style.height = "100%";
     video.style.display = "block";
-    video.style.objectFit = "contain";
     video.style.background = "#000";
 
     player.appendChild(video);
