@@ -79,9 +79,8 @@ function playChannel(channel) {
     video.style.background = "#000";
 
     player.appendChild(video);
-
-    // Thêm dòng này
     player.classList.add("playing");
+    showPlayerControls();
 
     // Tiêu đề
     const title = document.createElement("div");
@@ -500,17 +499,21 @@ document.addEventListener("fullscreenchange", function () {
 
     if (!btn || !player) return;
 
-    if (document.fullscreenElement) {
+  if (document.fullscreenElement) {
 
-        player.classList.add("playing");
-        btn.textContent = "🡼";
+      player.classList.add("playing");
+      btn.textContent = "🡼";
 
-    } else {
+      showPlayerControls();
 
-        player.classList.remove("playing");
-        btn.textContent = "⛶";
+  } else {
 
-    }
+      player.classList.remove("playing");
+      btn.textContent = "⛶";
+
+      hidePlayerControls();
+
+  }
 
 });
 
@@ -553,3 +556,30 @@ function hidePlayerControls(){
     controls.classList.remove("show");
 
 }
+// ===============================
+// Mouse / Touch Controls
+// ===============================
+
+document.addEventListener("mousemove", function () {
+
+    if (!document.fullscreenElement) return;
+
+    showPlayerControls();
+
+});
+
+document.addEventListener("touchstart", function () {
+
+    if (!document.fullscreenElement) return;
+
+    showPlayerControls();
+
+});
+
+document.addEventListener("click", function () {
+
+    if (!document.fullscreenElement) return;
+
+    showPlayerControls();
+
+});
