@@ -8,6 +8,11 @@ let tsPlayer = null;
 
 // -1 = AUTO
 let qualityLevel = parseInt(localStorage.getItem("quality") ?? "-1");
+// ===============================
+// Auto Hide Controls
+// ===============================
+
+let hideControlsTimer = null;
 
 // ===============================
 // Phát kênh
@@ -514,5 +519,37 @@ document.addEventListener("fullscreenchange", function () {
 // ===============================
 
 function detectBlackBars(video){
+
+}
+
+// ===============================
+// Player Controls Auto Hide
+// ===============================
+
+function showPlayerControls(){
+
+    const controls=document.querySelector(".player-controls");
+
+    if(!controls) return;
+
+    controls.classList.add("show");
+
+    clearTimeout(hideControlsTimer);
+
+    hideControlsTimer=setTimeout(function(){
+
+        controls.classList.remove("show");
+
+    },2000);
+
+}
+
+function hidePlayerControls(){
+
+    const controls=document.querySelector(".player-controls");
+
+    if(!controls) return;
+
+    controls.classList.remove("show");
 
 }
