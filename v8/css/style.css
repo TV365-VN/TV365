@@ -513,6 +513,21 @@ body{
 
     z-index:999999;
 
+    opacity:0;
+    visibility:hidden;
+    pointer-events:none;
+    transition:.25s;
+
+}
+
+.player-controls.show{
+
+    opacity:1;
+
+    visibility:visible;
+
+    pointer-events:auto;
+
 }
 
 .quality-button{
