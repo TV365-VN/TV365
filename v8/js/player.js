@@ -72,10 +72,8 @@ function playChannel(channel) {
     video.controls = false;
     video.playsInline = true;
 
-    video.style.width = "100%";
-    video.style.height = "100%";
-    video.style.display = "block";
-    video.style.background = "#000";
+   video.style.display = "block";
+   video.style.background = "#000";
 
     player.appendChild(video);
     player.classList.add("playing");
