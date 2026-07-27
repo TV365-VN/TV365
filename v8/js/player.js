@@ -75,7 +75,7 @@ function playChannel(channel) {
     video.style.width = "100%";
     video.style.height = "100%";
     video.style.display = "block";
-    video.style.objectFit = "cover";
+    video.style.objectFit = "contain";
     video.style.background = "#000";
 
     player.appendChild(video);
@@ -499,21 +499,39 @@ document.addEventListener("fullscreenchange", function () {
 
     if (!btn || !player) return;
 
-  if (document.fullscreenElement) {
+    const title = player.querySelector(".player-title");
 
-      player.classList.add("playing");
-      btn.textContent = "🡼";
+    if (document.fullscreenElement) {
 
-      showPlayerControls();
+        player.classList.add("playing");
 
-  } else {
+        btn.textContent = "🡼";
 
-      player.classList.remove("playing");
-      btn.textContent = "⛶";
+        showPlayerControls();
 
-      hidePlayerControls();
+        if (title) {
 
-  }
+            title.style.opacity = "0";
+            title.style.visibility = "hidden";
+
+        }
+
+    } else {
+
+        player.classList.remove("playing");
+
+        btn.textContent = "⛶";
+
+        hidePlayerControls();
+
+        if (title) {
+
+            title.style.opacity = "1";
+            title.style.visibility = "visible";
+
+        }
+
+    }
 
 });
 
