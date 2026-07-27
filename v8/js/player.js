@@ -21,6 +21,15 @@ let hideControlsTimer = null;
 function playChannel(channel) {
 
     if (!channel) return;
+    // Android APK -> Media3 Player
+    if (
+        window.TV365App &&
+        typeof window.TV365App.playChannel === "function"
+    ) {
+        window.currentChannel = channel;
+        TV365App.playChannel(channel.url);
+        return;
+    }
 
     window.currentChannel = channel;
 
