@@ -730,19 +730,22 @@ body{
 
     position:absolute;
 
-    top:50%;
-    left:50%;
+    inset:0;
 
-    transform:translate(-50%,-50%);
+    width:100%;
 
-    width:auto;
-
-    height:auto;
-
-    max-width:100vw;
-
-    max-height:100vh;
+    height:100%;
 
     object-fit:contain;
+
+    transform:none;
+
+    max-width:none;
+
+    max-height:none;
+
+    margin:auto;
+
+    background:#000;
 
 }
