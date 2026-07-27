@@ -58,6 +58,10 @@ function playChannel(channel) {
 
     // Video mới
     const video = document.createElement("video");
+    const detectCanvas = document.createElement("canvas");
+    const detectCtx = detectCanvas.getContext("2d", {
+        willReadFrequently: true
+    });
 
     video.autoplay = true;
     video.controls = false;
@@ -279,6 +283,11 @@ function playChannel(channel) {
             }
 
             video.play().catch(console.log);
+            setTimeout(function(){
+
+                detectBlackBars(video);
+
+            },1000);
 
             setTimeout(function () {
 
@@ -468,29 +477,42 @@ document.addEventListener("click", function (e) {
     }
 
 });
+
+// ===============================
+// Fullscreen Change
+// ===============================
+
 document.addEventListener("fullscreenchange", function () {
 
     const player = document.getElementById("player");
-    const playerSection = document.querySelector(".player-section");
     const menu = document.getElementById("qualityMenu");
 
-if (menu) {
-    menu.style.display = "none";
-}
+    if (menu) {
+        menu.style.display = "none";
+    }
 
     const btn = document.getElementById("fullscreenButton");
 
-    if (!btn) return;
+    if (!btn || !player) return;
 
-  if (document.fullscreenElement) {
+    if (document.fullscreenElement) {
 
-      player.classList.add("playing");
-      btn.textContent = "🡼";
+        player.classList.add("playing");
+        btn.textContent = "🡼";
 
-  } else {
+    } else {
 
-      player.classList.remove("playing");
-      btn.textContent = "⛶";
+        player.classList.remove("playing");
+        btn.textContent = "⛶";
 
-  }
+    }
+
 });
+
+// ===============================
+// Auto Detect Black Bars
+// ===============================
+
+function detectBlackBars(video){
+
+}
