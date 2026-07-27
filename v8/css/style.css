@@ -155,10 +155,12 @@ body{
     z-index:1;
 
 }
-
 .player-title{
+
     position:absolute;
+
     top:12px;
+
     left:15px;
 
     z-index:5;
@@ -174,6 +176,36 @@ body{
     font-size:18px;
 
     font-weight:bold;
+
+    transition:.25s;
+
+}
+/* ===========================
+   Fullscreen UI
+=========================== */
+.player:fullscreen{
+
+    border-radius:0 !important;
+
+    border:none !important;
+
+    box-shadow:none !important;
+
+}
+
+.player:-webkit-full-screen{
+
+    border-radius:0 !important;
+
+}
+
+.player:fullscreen .player-title,
+.player:-webkit-full-screen .player-title{
+
+    opacity:0;
+
+    visibility:hidden;
+
 }
 /* ===========================
    CATEGORY BAR
@@ -635,13 +667,6 @@ body{
 
 }
 
-.player-section:fullscreen .player{
-
-    width:100%;
-    height:100%;
-
-    border-radius:0;
-}
 .player-section:-webkit-full-screen{
 
     position:fixed !important;
@@ -671,15 +696,6 @@ body{
     border-radius:0;
 }
 
-.player-section:fullscreen video,
-.player-section:-webkit-full-screen video{
-
-    width:100%;
-    height:100%;
-
-    object-fit:cover;
-
-}
 /* ===========================
    Fullscreen Video
 =========================== */
