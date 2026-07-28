@@ -22,16 +22,13 @@ function playChannel(channel) {
 
     if (!channel) return;
     // Android APK -> Media3 Player
-    if (
-        window.TV365App &&
-        typeof window.TV365App.playChannel === "function"
-    ) {
-        window.currentChannel = channel;
-        TV365App.playChannel(channel.url);
-        return;
-    }
+   window.currentChannel = channel;
 
-    window.currentChannel = channel;
+   // Android APK -> Media3 Player
+   if (window.TV365App) {
+       TV365App.playChannel(channel.url);
+       return;
+   }
 
   const player = document.getElementById("player");
   const playerSection = document.querySelector(".player-section");
