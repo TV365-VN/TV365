@@ -13,8 +13,7 @@ window.addEventListener("load", async function () {
 
         window.channels = channels;
 
-        // Tạm thời tắt tạo danh mục để kiểm tra lỗi
-        // createCategories();
+        createCategories();
 
         createChannels();
 
