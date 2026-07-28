@@ -4,38 +4,49 @@
 
 window.addEventListener("load", async function () {
 
-    console.log("TV365 V8 đang khởi động...");
+    try {
 
-    // Đọc error.m3u
-    await loadM3U();
+        console.log("TV365 V8 đang khởi động...");
 
-    // Cho player.js truy cập danh sách kênh
-    window.channels = channels;
+        // Đọc M3U
+        await loadM3U();
 
-    // Tạo danh mục
-    createCategories();
+        window.channels = channels;
 
-    // Hiển thị tất cả kênh
-    createChannels();
+        // Tạm thời tắt tạo danh mục để kiểm tra lỗi
+        // createCategories();
 
-    // Tự động phát kênh đầu tiên
-    if (channels.length > 0) {
+        createChannels();
 
-        playChannel(channels[0]);
+        console.log("Đã tạo giao diện.");
 
-        // Active kênh đầu tiên
-        setTimeout(function () {
+        // ===== TẠM THỜI KHÔNG TỰ PHÁT KÊNH =====
+        /*
+        if (channels.length > 0) {
 
-            const first = document.querySelector(".channel-card");
+            playChannel(channels[0]);
 
-            if (first) {
-                first.classList.add("active");
-            }
+            setTimeout(function () {
 
-        }, 200);
+                const first = document.querySelector(".channel-card");
+
+                if (first) {
+                    first.classList.add("active");
+                }
+
+            }, 200);
+
+        }
+        */
+
+        console.log("TV365 V8 sẵn sàng.");
+
+    } catch (e) {
+
+        console.error(e);
+
+        alert(e);
 
     }
-
-    console.log("TV365 V8 sẵn sàng.");
 
 });
