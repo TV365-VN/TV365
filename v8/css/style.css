@@ -40,8 +40,14 @@ body{
 
 .app{
     width:100%;
-    height:100vh;
+    min-height:100vh;
+    min-height:100dvh;
+
     display:flex;
+    flex-direction:row;
+
+    overflow:hidden;
+
     background:transparent;
 }
 
@@ -50,15 +56,27 @@ body{
 =========================== */
 
 .sidebar{
-    width:230px;
+
+    flex:0 0 clamp(180px,15vw,260px);
+
+    width:auto;
+
+    min-width:180px;
+
+    max-width:260px;
+
     background:#111827;
+
     border-right:1px solid rgba(255,255,255,.08);
 
     display:flex;
+
     flex-direction:column;
+
     align-items:center;
 
-    padding:25px 15px;
+    padding:clamp(14px,2vw,28px)
+            clamp(10px,1vw,18px);
 }
 
 .brand{
@@ -67,18 +85,23 @@ body{
 }
 
 .logo{
-    width:95px;
-    height:95px;
+
+    width:clamp(70px,5vw,110px);
+
+    height:clamp(70px,5vw,110px);
+
     object-fit:contain;
-    display:block;
-    margin:auto;
+
 }
 
 .title{
-    margin-top:18px;
-    font-size:32px;
+
+    font-size:clamp(22px,2vw,34px);
+
     font-weight:700;
+
     letter-spacing:2px;
+
 }
 
 .premium{
@@ -103,13 +126,24 @@ body{
 =========================== */
 
 .content{
+
     flex:1;
+
+    min-width:0;
+
     display:flex;
+
     flex-direction:column;
 
-    padding:clamp(8px,2vw,20px) clamp(10px,3vw,60px);
+    overflow:hidden;
 
-    gap:clamp(8px,1vw,16px);
+    padding:
+        clamp(8px,1vw,20px)
+        clamp(10px,2vw,40px);
+
+    gap:
+        clamp(8px,1vw,16px);
+
 }
 
 /* ===========================
