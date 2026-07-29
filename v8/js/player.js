@@ -1,5 +1,5 @@
 // ==========================================
-// TV365 PLAYER ENGINE (Hỗ trợ Native Android Bridge & Web Player)
+// TV365 PLAYER ENGINE (Tách biệt hoàn toàn WebView & Native Player)
 // ==========================================
 
 let currentPlayingChannel = null;
@@ -13,16 +13,16 @@ async function playChannel(channel) {
     console.log("[TV365 Player] Đang chọn kênh:", channel.name, channel.url);
 
     // =========================================================================
-    // 1. CẦU NỐI SANG ANDROID NATIVE (MEDIA3 EXOPLAYER) - Dành cho App Android & Tivi
+    // 1. CẦU NỐI SANG ANDROID NATIVE (MEDIA3 EXOPLAYER) - Dành cho App Android
     // =========================================================================
     if (window.AndroidBridge && window.AndroidBridge.playChannel) {
-        const drmKey = (channel.props && channel.props['inputstream.adaptive.license_key']) || 
-                       channel.license_key || 
+        const drmKey = (channel.props && channel.props['inputstream.adaptive.license_key']) ||
+                       channel.license_key ||
                        channel.drmKey || "";
-        
+
         console.log("[TV365 Bridge] Đẩy sang Media3 ExoPlayer Native:", channel.url);
         window.AndroidBridge.playChannel(channel.url, drmKey);
-        
+
         updatePlayerUI(channel);
         return;
     }
@@ -68,32 +68,22 @@ function updatePlayerUI(channel) {
     if (placeholder) {
         placeholder.style.display = 'none';
     }
-
-    // Làm trong suốt khung chứa và ẩn thẻ video web để hiển thị PlayerView Native ở dưới
-    const playerSection = document.querySelector('.player-section') || document.getElementById('player');
-    if (playerSection) {
-        playerSection.style.background = 'transparent';
-    }
-    const videoElement = document.querySelector('video');
-    if (videoElement) {
-        videoElement.style.display = 'none';
-    }
 }
 
-// Dừng phát kênh (Đã thêm async để chuẩn cú pháp await của Shaka Player)
+// Dừng phát kênh
 async function stopChannel() {
     if (window.AndroidBridge && window.AndroidBridge.stopChannel) {
         window.AndroidBridge.stopChannel();
     }
-    
-    if (hlsPlayerInstance) { 
-        hlsPlayerInstance.destroy(); 
-        hlsPlayerInstance = null; 
+
+    if (hlsPlayerInstance) {
+        hlsPlayerInstance.destroy();
+        hlsPlayerInstance = null;
     }
-    
-    if (shakaPlayerInstance) { 
-        await shakaPlayerInstance.destroy(); 
-        shakaPlayerInstance = null; 
+
+    if (shakaPlayerInstance) {
+        await shakaPlayerInstance.destroy();
+        shakaPlayerInstance = null;
     }
 
     const videoElement = document.querySelector('video');
@@ -101,7 +91,6 @@ async function stopChannel() {
         videoElement.pause();
         videoElement.src = '';
         videoElement.load();
-        videoElement.style.display = 'block';
     }
 
     const placeholder = document.querySelector('.player-placeholder');
