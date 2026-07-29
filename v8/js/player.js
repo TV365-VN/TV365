@@ -80,21 +80,28 @@ function updatePlayerUI(channel) {
     }
 }
 
-// Dừng phát kênh
-function stopChannel() {
+// Dừng phát kênh (Đã thêm async để chuẩn cú pháp await của Shaka Player)
+async function stopChannel() {
     if (window.AndroidBridge && window.AndroidBridge.stopChannel) {
         window.AndroidBridge.stopChannel();
     }
     
-    if (hlsPlayerInstance) { hlsPlayerInstance.destroy(); hlsPlayerInstance = null; }
-    if (shakaPlayerInstance) { await shakaPlayerInstance.destroy(); shakaPlayerInstance = null; }
+    if (hlsPlayerInstance) { 
+        hlsPlayerInstance.destroy(); 
+        hlsPlayerInstance = null; 
+    }
+    
+    if (shakaPlayerInstance) { 
+        await shakaPlayerInstance.destroy(); 
+        shakaPlayerInstance = null; 
+    }
 
     const videoElement = document.querySelector('video');
     if (videoElement) {
         videoElement.pause();
         videoElement.src = '';
         videoElement.load();
-        videoElement.style.display = 'block'; // Hiển thị lại thẻ video khi dừng
+        videoElement.style.display = 'block';
     }
 
     const placeholder = document.querySelector('.player-placeholder');
