@@ -29,11 +29,47 @@ function parseM3U(text) {
 
     const lines = text.split("\n");
 
-    let current = {};
+    let current = {
+        name: "",
+        logo: "",
+        group: "",
+        url: "",
+        userAgent: "",
+        manifestType: "",
+        licenseType: "",
+        licenseKey: ""
+    };
 
     for (let line of lines) {
 
         line = line.trim();
+        // User-Agent
+        if (line.startsWith("#EXTVLCOPT:http-user-agent=")) {
+            current.userAgent = line.substring(
+                "#EXTVLCOPT:http-user-agent=".length
+            );
+            continue;
+        }
+
+        // Manifest Type
+        if (line.startsWith("#KODIPROP:inputstream.adaptive.manifest_type=")) {
+            current.manifestType = line.split("=").pop().trim();
+            continue;
+        }
+
+        // License Type
+        if (line.startsWith("#KODIPROP:inputstream.adaptive.license_type=")) {
+            current.licenseType = line.split("=").pop().trim();
+            continue;
+        }
+
+        // License Key
+        if (line.startsWith("#KODIPROP:inputstream.adaptive.license_key=")) {
+            current.licenseKey = line.substring(
+                "#KODIPROP:inputstream.adaptive.license_key=".length
+            );
+            continue;
+        }
 
         if (line.startsWith("#EXTINF")) {
 
@@ -52,11 +88,16 @@ function parseM3U(text) {
                 group = "KHÁC";
             }
 
-            current = {
-                name,
-                logo,
-                group
-            };
+           current = {
+               name,
+               logo,
+               group,
+               url: "",
+               userAgent: "",
+               manifestType: "",
+               licenseType: "",
+               licenseKey: ""
+           };
 
             if (!categories.includes(group)) {
                 categories.push(group);
@@ -71,7 +112,16 @@ function parseM3U(text) {
 
             channels.push(current);
 
-            current = {};
+            current = {
+                name: "",
+                logo: "",
+                group: "",
+                url: "",
+                userAgent: "",
+                manifestType: "",
+                licenseType: "",
+                licenseKey: ""
+            };
 
         }
     }
