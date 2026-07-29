@@ -1,606 +1,99 @@
-// ===============================
-// TV365 V8.5 - player.js
-// ===============================
-
-let hls = null;
-let shakaPlayer = null;
-let tsPlayer = null;
-
-// -1 = AUTO
-let qualityLevel = parseInt(localStorage.getItem("quality") ?? "-1");
-// ===============================
-// Auto Hide Controls
-// ===============================
-
-let hideControlsTimer = null;
-
-// ===============================
-// Phát kênh
-// ===============================
-
-function playChannel(channel) {
-
-    if (!channel) return;
-    // Android APK -> Media3 Player
-   window.currentChannel = channel;
-
-   // Android APK -> Media3 Player
-   if (window.TV365App) {
-       TV365App.playChannel(channel.url);
-       return;
-   }
-
-  const player = document.getElementById("player");
-  const playerSection = document.querySelector(".player-section");
-
-  if (!player || !playerSection) return;
-
-    // Hủy player cũ
-    if (hls) {
-        hls.destroy();
-        hls = null;
-    }
-
-    if (shakaPlayer) {
-        shakaPlayer.destroy();
-        shakaPlayer = null;
-    }
-
-    if (tsPlayer) {
-        tsPlayer.destroy();
-        tsPlayer = null;
-    }
-
-    // Xóa video cũ
-    player.querySelectorAll("video").forEach(video => {
-
-        video.pause();
-
-        video.removeAttribute("src");
-
-        video.load();
-
-        video.remove();
-
-    });
-
-    // Xóa tiêu đề cũ
-    player.querySelectorAll(".player-title").forEach(e => e.remove());
-
-    // Video mới
-    const video = document.createElement("video");
-    const detectCanvas = document.createElement("canvas");
-    const detectCtx = detectCanvas.getContext("2d", {
-        willReadFrequently: true
-    });
-
-    video.autoplay = true;
-    video.controls = false;
-    video.playsInline = true;
-
-   video.style.display = "block";
-   video.style.background = "#000";
-
-    player.appendChild(video);
-    player.classList.add("playing");
-    showPlayerControls();
-
-    // Tiêu đề
-    const title = document.createElement("div");
-
-    title.className = "player-title";
-    title.textContent = channel.name || "";
-
-    player.appendChild(title);
-
-    // ===============================
-    // Quality Controls
-    // ===============================
-
-    const qualityButton = document.getElementById("qualityButton");
-    const qualityMenu = document.getElementById("qualityMenu");
-    const fullscreenButton =
-        document.getElementById("fullscreenButton");
-        if(fullscreenButton){
-
-          fullscreenButton.onclick = async function () {
-
-              if (document.fullscreenElement) {
-
-                  await document.exitFullscreen();
-
-              } else {
-
-                  await player.requestFullscreen();
-
-              }
-
-          };
-          }
-
-    if (qualityButton && qualityMenu) {
-
-        qualityMenu.innerHTML = "";
-
-        qualityMenu.style.display = "none";
-
-        qualityButton.onclick = function (e) {
-
-            e.stopPropagation();
-
-            qualityMenu.style.display =
-                qualityMenu.style.display === "block"
-                    ? "none"
-                    : "block";
-
-        };
-
-    }
-
-    // ===============================
-    // HLS
-    // ===============================
-
-    if (Hls.isSupported()) {
-
-        hls = new Hls({
-
-            enableWorker: true,
-            lowLatencyMode: true,
-
-            startLevel: -1,
-            capLevelToPlayerSize: false
-
-        });
-
-        hls.loadSource(channel.url);
-
-        hls.attachMedia(video);
-
-        hls.on(Hls.Events.MEDIA_ATTACHED, function () {
-
-            console.log("MEDIA ATTACHED");
-
-        });
-
-        hls.on(Hls.Events.MANIFEST_PARSED, function () {
-            if (hls.levels.length > 0 && qualityButton && qualityMenu) {
-
-                qualityMenu.innerHTML = "";
-
-                // ===== AUTO =====
-                const autoItem = document.createElement("div");
-
-                autoItem.className = "quality-item";
-                autoItem.textContent = "AUTO";
-
-                autoItem.onclick = function () {
-
-                    qualityLevel = -1;
-
-                    localStorage.setItem("quality", "-1");
-
-                    let best = 0;
-
-                    hls.levels.forEach((l, i) => {
-
-                        if ((l.height || 0) > (hls.levels[best].height || 0)) {
-
-                            best = i;
-
-                        }
-
-                    });
-
-                    hls.currentLevel = best;
-
-                    qualityButton.textContent =
-                        "⚙ AUTO (" +
-                        (hls.levels[best].height || "?") +
-                        "P)";
-
-                    qualityMenu.style.display = "none";
-
-                };
-
-                qualityMenu.appendChild(autoItem);
-
-                // ===== Danh sách chất lượng =====
-
-                const uniqueLevels = [];
-
-                hls.levels.forEach((level, index) => {
-                    if (!uniqueLevels.some(x => x.level.height === level.height)) {
-                        uniqueLevels.push({ level, index });
-                    }
-                });
-
-                uniqueLevels
-                    .sort((a, b) => (b.level.height || 0) - (a.level.height || 0))
-                    .forEach(function (itemData) {
-
-                        const item = document.createElement("div");
-
-                        item.className = "quality-item";
-
-                        item.textContent =
-                            (itemData.level.height || "?") + "P";
-
-                        item.onclick = function () {
-
-                            qualityLevel = itemData.index;
-
-                            localStorage.setItem(
-                                "quality",
-                                qualityLevel
-                            );
-
-                            hls.currentLevel = itemData.index;
-
-                            qualityButton.textContent =
-                                "⚙ " +
-                                (itemData.level.height || "?") +
-                                "P";
-
-                            qualityMenu.style.display = "none";
-
-                        };
-
-                        qualityMenu.appendChild(item);
-
-                    });
-
-                if (qualityLevel == -1) {
-
-                    let best = 0;
-
-                    hls.levels.forEach((l, i) => {
-
-                        if ((l.height || 0) >
-                            (hls.levels[best].height || 0)) {
-
-                            best = i;
-
-                        }
-
-                    });
-
-                    hls.currentLevel = best;
-
-                    qualityButton.textContent =
-                        "⚙ AUTO (" +
-                        (hls.levels[best].height || "?") +
-                        "P)";
-
-                } else {
-
-                    hls.currentLevel = qualityLevel;
-
-                    if (hls.levels[qualityLevel]) {
-
-                        qualityButton.textContent =
-                            "⚙ " +
-                            (hls.levels[qualityLevel].height || "?") +
-                            "P";
-
-                    }
-
-                }
-
-            }
-
-            video.play().catch(console.log);
-            setTimeout(function(){
-
-                detectBlackBars(video);
-
-            },1000);
-
-            setTimeout(function () {
-
-            if (!document.fullscreenElement &&
-                player.requestFullscreen) {
-
-                player.requestFullscreen().catch(()=>{});
-            }
-
-            }, 300);
-
-        });
-        hls.on(Hls.Events.ERROR, function (event, data) {
-
-            console.log("HLS ERROR", data);
-
-            if (data.fatal) {
-
-                switch (data.type) {
-
-                    case Hls.ErrorTypes.NETWORK_ERROR:
-
-                        console.log("Khôi phục NETWORK...");
-
-                        hls.startLoad();
-
-                        break;
-
-                    case Hls.ErrorTypes.MEDIA_ERROR:
-
-                        console.log("Khôi phục MEDIA...");
-
-                        hls.recoverMediaError();
-
-                        break;
-
-                    default:
-
-                        hls.destroy();
-
-                        break;
-
-                }
-
-            }
-
-        });
-
-    }
-
-    // ===============================
-    // Safari / iPhone
-    // ===============================
-
-    else if (video.canPlayType("application/vnd.apple.mpegurl")) {
-
-        video.src = channel.url;
-
-        video.addEventListener("loadedmetadata", function () {
-
-            video.play().catch(console.log);
-
-           setTimeout(function(){
-
-               if(!document.fullscreenElement){
-
-                   player.requestFullscreen();
-
-               }
-
-           },300);
-
-        });
-
-    }
-
-    // ===============================
-    // Không hỗ trợ
-    // ===============================
-
-    else {
-
-        player.innerHTML = `
-
-            <div class="player-placeholder">
-
-                Thiết bị không hỗ trợ HLS
-
-            </div>
-
-        `;
-
-    }
-
-}
-// ===============================
-// Remote TV - Đổi kênh
-// ===============================
-
-let remoteLock = false;
-
-document.addEventListener("keydown", function (e) {
-
-    if (!document.fullscreenElement) return;
-
-    if (!window.channels || !window.currentChannel) return;
-
-    if (remoteLock) return;
-
-    const key = e.key || "";
-    const code = e.code || "";
-    const keyCode = e.keyCode || e.which;
-
-    let index = window.channels.findIndex(
-        c => c.url === window.currentChannel.url
-    );
-
-    if (index < 0) return;
-
-    // Kênh trước
-    if (
-        key === "ArrowUp" ||
-        code === "ArrowUp" ||
-        keyCode === 19
-    ) {
-
-        e.preventDefault();
-
-        if (index > 0) {
-
-            remoteLock = true;
-
-            playChannel(window.channels[index - 1]);
-
-            setTimeout(function () {
-
-                remoteLock = false;
-
-            }, 400);
-
-        }
-
+// ==========================================
+// TV365 PLAYER ENGINE (Hỗ trợ Native Android Bridge & Web Player)
+// ==========================================
+
+let currentPlayingChannel = null;
+let hlsPlayerInstance = null;
+let shakaPlayerInstance = null;
+
+async function playChannel(channel) {
+    if (!channel || !channel.url) return;
+    currentPlayingChannel = channel;
+
+    console.log("[TV365 Player] Đang chọn kênh:", channel.name, channel.url);
+
+    // =========================================================================
+    // 1. CẦU NỐI SANG ANDROID NATIVE (MEDIA3 EXOPLAYER) - Dành cho App Android & Tivi
+    // =========================================================================
+    if (window.AndroidBridge && window.AndroidBridge.playChannel) {
+        // Lấy khóa DRM (ClearKey/Widevine) từ thuộc tính kênh (Hỗ trợ HBO, SCTV, Cinemax...)
+        const drmKey = (channel.props && channel.props['inputstream.adaptive.license_key']) ||
+                       channel.license_key ||
+                       channel.drmKey || "";
+
+        console.log("[TV365 Bridge] Đẩy sang Media3 ExoPlayer Native:", channel.url);
+        window.AndroidBridge.playChannel(channel.url, drmKey);
+
+        // Ẩn chữ hướng dẫn, hiện giao diện đang phát trên web
+        updatePlayerUI(channel);
         return;
-
     }
 
-    // Kênh sau
-    if (
-        key === "ArrowDown" ||
-        code === "ArrowDown" ||
-        keyCode === 20
-    ) {
+    // =========================================================================
+    // 2. TRÌNH PHÁT TRÊN TRÌNH DUYỆT WEB (Dành cho Test trên PC / Trình duyệt)
+    // =========================================================================
+    const videoElement = document.getElementById('video-player') || document.querySelector('video');
+    if (!videoElement) return;
 
-        e.preventDefault();
+    const url = channel.url;
+    const isMpd = url.includes('.mpd') || (channel.props && channel.props['inputstream.adaptive.manifest_type'] === 'mpd');
 
-        if (index < window.channels.length - 1) {
+    updatePlayerUI(channel);
 
-            remoteLock = true;
+    try {
+        // Dừng các player cũ trên web
+        if (hlsPlayerInstance) { hlsPlayerInstance.destroy(); hlsPlayerInstance = null; }
+        if (shakaPlayerInstance) { await shakaPlayerInstance.destroy(); shakaPlayerInstance = null; }
 
-            playChannel(window.channels[index + 1]);
-
-            setTimeout(function () {
-
-                remoteLock = false;
-
-            }, 400);
-
+        if (isMpd && typeof shaka !== 'undefined') {
+            // Phát luồng DASH (.mpd) bằng Shaka Player
+            shakaPlayerInstance = new shaka.Player(videoElement);
+            await shakaPlayerInstance.load(url);
+            videoElement.play().catch(e => console.error("Shaka play error:", e));
+        } else if (typeof Hls !== 'undefined' && Hls.isSupported() && (url.includes('.m3u8') || url.includes('playlist.m3u'))) {
+            // Phát luồng HLS (.m3u8) bằng Hls.js
+            hlsPlayerInstance = new Hls();
+            hlsPlayerInstance.loadSource(url);
+            hlsPlayerInstance.attachMedia(videoElement);
+            hlsPlayerInstance.on(Hls.Events.MANIFEST_PARSED, () => {
+                videoElement.play().catch(e => console.error("HLS play error:", e));
+            });
+        } else {
+            // Phát trực tiếp qua thẻ video HTML5 thông thường
+            videoElement.src = url;
+            videoElement.play().catch(e => console.error("Native play error:", e));
         }
-
+    } catch (e) {
+        console.error("[TV365 Player] Lỗi khởi chạy player web:", e);
     }
-
-});
-
-// ===============================
-// Đóng menu Quality khi click ngoài
-// ===============================
-
-document.addEventListener("click", function (e) {
-
-    const btn = document.getElementById("qualityButton");
-    const menu = document.getElementById("qualityMenu");
-
-    if (!btn || !menu) return;
-
-    if (!btn.contains(e.target) && !menu.contains(e.target)) {
-        menu.style.display = "none";
-    }
-
-});
-
-// ===============================
-// Fullscreen Change
-// ===============================
-
-document.addEventListener("fullscreenchange", function () {
-
-    const player = document.getElementById("player");
-    const menu = document.getElementById("qualityMenu");
-
-    if (menu) {
-        menu.style.display = "none";
-    }
-
-    const btn = document.getElementById("fullscreenButton");
-
-    if (!btn || !player) return;
-
-    const title = player.querySelector(".player-title");
-
-    if (document.fullscreenElement) {
-
-        player.classList.add("playing");
-
-        btn.textContent = "🡼";
-
-        showPlayerControls();
-
-        if (title) {
-
-            title.style.opacity = "0";
-            title.style.visibility = "hidden";
-
-        }
-
-    } else {
-
-        player.classList.remove("playing");
-
-        btn.textContent = "⛶";
-
-        hidePlayerControls();
-
-        if (title) {
-
-            title.style.opacity = "1";
-            title.style.visibility = "visible";
-
-        }
-
-    }
-
-});
-
-// ===============================
-// Auto Detect Black Bars
-// ===============================
-
-function detectBlackBars(video){
-
 }
 
-// ===============================
-// Player Controls Auto Hide
-// ===============================
-
-function showPlayerControls(){
-
-    const controls=document.querySelector(".player-controls");
-
-    if(!controls) return;
-
-    controls.classList.add("show");
-
-    clearTimeout(hideControlsTimer);
-
-    hideControlsTimer=setTimeout(function(){
-
-        controls.classList.remove("show");
-
-    },2000);
-
+// Cập nhật giao diện khi bắt đầu xem kênh
+function updatePlayerUI(channel) {
+    const placeholder = document.querySelector('.player-placeholder');
+    if (placeholder) {
+        placeholder.style.display = 'none';
+    }
 }
 
-function hidePlayerControls(){
+// Dừng phát kênh
+function stopChannel() {
+    if (window.AndroidBridge && window.AndroidBridge.stopChannel) {
+        window.AndroidBridge.stopChannel();
+    }
 
-    const controls=document.querySelector(".player-controls");
+    if (hlsPlayerInstance) { hlsPlayerInstance.destroy(); hlsPlayerInstance = null; }
+    if (shakaPlayerInstance) { shakaPlayerInstance.destroy(); shakaPlayerInstance = null; }
 
-    if(!controls) return;
+    const videoElement = document.querySelector('video');
+    if (videoElement) {
+        videoElement.pause();
+        videoElement.src = '';
+        videoElement.load();
+    }
 
-    controls.classList.remove("show");
-
+    const placeholder = document.querySelector('.player-placeholder');
+    if (placeholder) {
+        placeholder.style.display = 'flex';
+    }
 }
-// ===============================
-// Mouse / Touch Controls
-// ===============================
-
-document.addEventListener("mousemove", function () {
-
-    if (!document.fullscreenElement) return;
-
-    showPlayerControls();
-
-});
-
-document.addEventListener("touchstart", function () {
-
-    if (!document.fullscreenElement) return;
-
-    showPlayerControls();
-
-});
-
-document.addEventListener("click", function () {
-
-    if (!document.fullscreenElement) return;
-
-    showPlayerControls();
-
-});
