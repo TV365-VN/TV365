@@ -1,5 +1,5 @@
 // ==========================================
-// TV365 PLAYER ENGINE (Tách biệt hoàn toàn WebView & Native Player)
+// TV365 PLAYER ENGINE (Đã tối ưu bắt khóa DRM cho HBO)
 // ==========================================
 
 let currentPlayingChannel = null;
@@ -10,19 +10,25 @@ async function playChannel(channel) {
     if (!channel || !channel.url) return;
     currentPlayingChannel = channel;
 
-    console.log("[TV365 Player] Đang chọn kênh:", channel.name, channel.url);
+    console.log("[TV365 Player] Đang chọn kênh:", channel.name);
+    console.log("[TV365 Player] URL Video:", channel.url);
+    console.log("[TV365 Player] Thông tin Channel đầy đủ:", JSON.stringify(channel));
 
     // =========================================================================
-    // 1. CẦU NỐI SANG ANDROID NATIVE (MEDIA3 EXOPLAYER) - Dành cho App Android
+    // 1. CẦU NỐI SANG ANDROID NATIVE (MEDIA3 EXOPLAYER)
     // =========================================================================
     if (window.AndroidBridge && window.AndroidBridge.playChannel) {
-        const drmKey = (channel.props && channel.props['inputstream.adaptive.license_key']) ||
-                       channel.license_key ||
-                       channel.drmKey || "";
-
-        console.log("[TV365 Bridge] Đẩy sang Media3 ExoPlayer Native:", channel.url);
+        // Quét tất cả các trường có khả năng chứa license key / DRM URL của HBO
+        const drmKey = channel.license_key || 
+                       (channel.props && channel.props['inputstream.adaptive.license_key']) || 
+                       channel.drmKey || 
+                       channel.licenseUrl || 
+                       channel.drm_url || 
+                       channel.key || "";
+        
+        console.log("[TV365 Bridge] DRM Key trích xuất được:", drmKey);
         window.AndroidBridge.playChannel(channel.url, drmKey);
-
+        
         updatePlayerUI(channel);
         return;
     }
@@ -75,15 +81,15 @@ async function stopChannel() {
     if (window.AndroidBridge && window.AndroidBridge.stopChannel) {
         window.AndroidBridge.stopChannel();
     }
-
-    if (hlsPlayerInstance) {
-        hlsPlayerInstance.destroy();
-        hlsPlayerInstance = null;
+    
+    if (hlsPlayerInstance) { 
+        hlsPlayerInstance.destroy(); 
+        hlsPlayerInstance = null; 
     }
-
-    if (shakaPlayerInstance) {
-        await shakaPlayerInstance.destroy();
-        shakaPlayerInstance = null;
+    
+    if (shakaPlayerInstance) { 
+        await shakaPlayerInstance.destroy(); 
+        shakaPlayerInstance = null; 
     }
 
     const videoElement = document.querySelector('video');
