@@ -25,6 +25,24 @@ body{
 }
 h1{color:#ff9800;}
 p{font-size:18px;line-height:1.6;}
+/* Kiểu dáng cho phần mã QR mới thêm vào */
+.qr-section {
+    margin: 25px 0;
+    text-align: center;
+}
+.qr-section p {
+    font-size: 16px;
+    font-weight: bold;
+    color: #4caf50; /* Màu xanh lá cây nổi bật */
+    margin-bottom: 10px;
+}
+.qr-section img {
+    width: 180px; /* Điều chỉnh kích thước mã QR */
+    height: 180px;
+    border: 4px solid #fff; /* Tạo viền trắng cho mã QR */
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0,255,0,.3); /* Hiệu ứng phát sáng nhẹ */
+}
 button{
     margin-top:20px;
     padding:10px 25px;
@@ -43,8 +61,15 @@ button:hover{
 
 <div class="box">
     <h1>📢 THÔNG BÁO ⏳</h1>
-    <p>
-        ✨ HỆ THỐNG ĐANG NGƯNG HOẠT ĐỘNG ✨<br>
+    <p>✨ HỆ THỐNG ĐANG NGƯNG HOẠT ĐỘNG ✨</p>
+
+    <!-- PHẦN MÃ QR MỚI ĐƯỢC THÊM VÀO ĐÂY -->
+    <div class="qr-section">
+        <p>Vui lòng quét mã QR để trò chuyện</p>
+        <img src="image_0.png" alt="Mã QR trò chuyện">
+    </div>
+    <!-- KẾT THÚC PHẦN MÃ QR -->
+
     <p>
         🎉 Người hạnh phúc không phải là người được sống trong hoàn cảnh thuận lợi, mà là một người có thái độ sống tốt trước bất kỳ hoàn cảnh nào 🎉
     </p>
