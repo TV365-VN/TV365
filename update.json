@@ -1,7 +1,7 @@
 {
-  "versionCode": 85,
-  "versionName": "V8.5",
-  "apkUrl": "https://tv365-vn.github.io/TV365/TV365_V8.5.apk",
+  "versionCode": 86,
+  "versionName": "V8.6",
+  "apkUrl": "https://tv365-vn.github.io/TV365/TV365_V8.6.apk",
   "forceUpdate": true,
-  "message": "📢 THÔNG BÁO CÀI ĐẶT TV365 V8.5\n⚠️ QUAN TRỌNG\nMột số TIVI đang sử dụng TV365 phiên bản cũ bị lỗi cập nhật tự động nên không thể tự cập nhật lên V8.5.\n📱 MOBILE: Vẫn cập nhật trực tiếp từ app cũ lên phiên bản mới bình thường.\n📺 TIVI: Vui lòng thực hiện:\n1️⃣ Gỡ TV365 phiên bản cũ.\n2️⃣ Tải TV365 V8.5 theo hướng dẫn bên dưới.\n3️⃣ Cài đặt và mở TV365 V8.5.\n🔗 CÁCH TẢI TV365 V8.5\n🔹 DÙNG APP DOWNLOADER:\nMở Downloader trên Android TV → Nhập mã: 8251671\n→ Tải TV365 V8.5 → Cài đặt → Mở ứng dụng.\n🔹 TẢI TRỰC TIẾP QUA LINK:\nhttp://aftv.news/8251671\n→ Tải TV365 V8.5 → Cài đặt → Mở ứng dụng."
+  "message": "CẬP NHẬT QUAN TRỌNG\n\nNếu cập nhật trực tiếp gặp lỗi, vui lòng cập nhật qua Downloader Code: 7842516\n\nHoặc tải file APK tại:\nhttp://aftv.news/7842516\n\n• Cải thiện giao diện UI, thân thiện và dễ sử dụng hơn.\n• Sửa các lỗi được người dùng báo cáo và góp ý.\n• Cải thiện hiệu suất, giảm giật lag trên các thiết bị cấu hình yếu.\n• Vá và khắc phục một số lỗi nhỏ khác.\n\nCảm ơn bạn đã sử dụng TV365!"
 }
